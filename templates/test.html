@@ -5,3 +5,13 @@
 {% else %}
   <h1>no varName? Sad</h1>
 {% endif %}
+
+
+{% if dbError %}
+  <h3>There was an error: {{ dbError }}</h3>
+{% endif %}
+
+<p>
+There are now {{ nameCount }} names in the database
+</p>
+
