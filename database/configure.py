@@ -17,7 +17,8 @@ from sqlalchemy.orm import relationship
 import datetime
 import pdb
 
-application = app = Flask(__name__)
+# Template folder location is relative to the file that creates the app (which is this file)
+application = app = Flask(__name__, template_folder="../templates")
 
 # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
 db_username = os.environ["RDS_USERNAME"]
@@ -64,34 +65,34 @@ class Elective(Base):
     room: Mapped[str]
     consideredPE: Mapped[bool]
 
-@app.route("/")
-def hello_world():
-    result = db.session.execute(db.select(Elective)).scalars()
-    return "<p>{result}</p>"
+# @app.route("/")
+# def hello_world():
+#     result = db.session.execute(db.select(Elective)).scalars()
+#     return "<p>{result}</p>"
 
-with app.app_context():
-# #    db.create_all()
-#     # Appears that Flask-SQLAlchemy doesn't support creation of Declarative classes.
-#     # https://github.com/pallets-eco/flask-sqlalchemy/issues/1140
-#     Base.metadata.create_all(db.engine)
+# with app.app_context():
+# # #    db.create_all()
+# #     # Appears that Flask-SQLAlchemy doesn't support creation of Declarative classes.
+# #     # https://github.com/pallets-eco/flask-sqlalchemy/issues/1140
+# #     Base.metadata.create_all(db.engine)
 
-#     db.session.add(Student(name="Jim Turner", grade=6, teacher="Ruiz", accessID="sjdhfd"))
+# #     db.session.add(Student(name="Jim Turner", grade=6, teacher="Ruiz", accessID="sjdhfd"))
 
-#     s1 = Session(startDate=datetime.date(2023,9,5), endDate=datetime.date(2023,11,5), active=True)
-#     db.session.add(s1)
-#     db.session.add(Session(startDate=datetime.date(2023,11,6), endDate=datetime.date(2024,2,5), active=False))
+# #     s1 = Session(startDate=datetime.date(2023,9,5), endDate=datetime.date(2023,11,5), active=True)
+# #     db.session.add(s1)
+# #     db.session.add(Session(startDate=datetime.date(2023,11,6), endDate=datetime.date(2024,2,5), active=False))
 
-#     db.session.add(Elective(session=s1, name="Bob's funhouse", lead="Bob Bobberson", maxAttendees=10, day="Monday", rotation=3, multisession=False, room="P3", consideredPE=False))
-#     db.session.add(Elective(session=s1, name="Shoes", lead="Nancy Decker", maxAttendees=10, day="Wednesday", rotation=1, multisession=False, room="P3", consideredPE=True))
+# #     db.session.add(Elective(session=s1, name="Bob's funhouse", lead="Bob Bobberson", maxAttendees=10, day="Monday", rotation=3, multisession=False, room="P3", consideredPE=False))
+# #     db.session.add(Elective(session=s1, name="Shoes", lead="Nancy Decker", maxAttendees=10, day="Wednesday", rotation=1, multisession=False, room="P3", consideredPE=True))
  
-#     db.session.commit()
-    s = db.select(Elective)
-    r = db.session.execute(s)
-#    all = r.all()
+# #     db.session.commit()
+#     s = db.select(Elective)
+#     r = db.session.execute(s)
+# #    all = r.all()
 
-    for x in r.scalars():
-        print(x)
-        print(x.name)
-        print(x.session.startDate)
-    pdb.set_trace()
-    print('woo')
+#     for x in r.scalars():
+#         print(x)
+#         print(x.name)
+#         print(x.session.startDate)
+#     pdb.set_trace()
+#     print('woo')
