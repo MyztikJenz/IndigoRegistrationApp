@@ -18,6 +18,11 @@ from sqlalchemy import select
 
 import datetime
 import pdb
+import csv
+import hashlib
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 # Template folder location is relative to the file that creates the app (which is this file)
 application = app = Flask(__name__, template_folder="../templates")
@@ -89,37 +94,39 @@ with app.app_context():
 # # #    db.create_all()
 # #     # Appears that Flask-SQLAlchemy doesn't support creation of Declarative classes.
 # #     # https://github.com/pallets-eco/flask-sqlalchemy/issues/1140
-    Base.metadata.create_all(db.engine)
+    doDBStuff = False
+    if doDBStuff:
+        Base.metadata.create_all(db.engine)
 
 
-    db.session.add(Student(name="Jake Turner", grade=6, teacher="Ruiz", accessID="sjdhfd"))
-    db.session.add(Student(name="Mike Smith", grade=7, teacher="Vong", accessID="xxx888"))
-    jim = Student(name="Jim Turner", grade=6, teacher="Ruiz", accessID="999771")
-    db.session.add(jim)
+        db.session.add(Student(name="Jake Turner", grade=6, teacher="Ruiz", accessID="sjdhfd"))
+        db.session.add(Student(name="Mike Smith", grade=7, teacher="Vong", accessID="xxx888"))
+        jim = Student(name="Jim Turner", grade=6, teacher="Ruiz", accessID="999771")
+        db.session.add(jim)
 
-    s1 = Session(startDate=datetime.date(2023,9,5), endDate=datetime.date(2023,11,5), active=True)
-    db.session.add(s1)
-    s2 = Session(startDate=datetime.date(2023,11,6), endDate=datetime.date(2024,2,5), active=False)
-    db.session.add(s2)
+        s1 = Session(startDate=datetime.date(2023,9,5), endDate=datetime.date(2023,11,5), active=True)
+        db.session.add(s1)
+        s2 = Session(startDate=datetime.date(2023,11,6), endDate=datetime.date(2024,2,5), active=False)
+        db.session.add(s2)
 
-    e1 = Elective(session=s1, name="Bob's funhouse", lead="Bob Bobberson", maxAttendees=10, day="Monday", rotation=3, multisession=False, room="P3", consideredPE=False)
-    db.session.add(e1)
-    e2 = Elective(session=s1, name="Cooking", lead="Joni Cimoli", maxAttendees=8, day="Monday", rotation=1, multisession=False, room="Kitchen", consideredPE=False)
-    db.session.add(e2)
-    e3 = Elective(session=s1, name="Cooking", lead="Joni Cimoli", maxAttendees=8, day="Thursday", rotation=1, multisession=False, room="Kitchen", consideredPE=False)
-    db.session.add(e3)
-    db.session.add(Elective(session=s2, name="Shoes", lead="Nancy Decker", maxAttendees=10, day="Wednesday", rotation=1, multisession=False, room="P3", consideredPE=True))
-    db.session.commit()
+        e1 = Elective(session=s1, name="Bob's funhouse", lead="Bob Bobberson", maxAttendees=10, day="Monday", rotation=3, multisession=False, room="P3", consideredPE=False)
+        db.session.add(e1)
+        e2 = Elective(session=s1, name="Cooking", lead="Joni Cimoli", maxAttendees=8, day="Monday", rotation=1, multisession=False, room="Kitchen", consideredPE=False)
+        db.session.add(e2)
+        e3 = Elective(session=s1, name="Cooking", lead="Joni Cimoli", maxAttendees=8, day="Thursday", rotation=1, multisession=False, room="Kitchen", consideredPE=False)
+        db.session.add(e3)
+        db.session.add(Elective(session=s2, name="Shoes", lead="Nancy Decker", maxAttendees=10, day="Wednesday", rotation=1, multisession=False, room="P3", consideredPE=True))
+        db.session.commit()
 
-    jim.schedule.append(Schedule(session=s1, elective=e2))
-    jim.schedule.append(Schedule(session=s1, elective=e3))
-    db.session.commit()
+        jim.schedule.append(Schedule(session=s1, elective=e2))
+        jim.schedule.append(Schedule(session=s1, elective=e3))
+        db.session.commit()
 
-    r = db.session.scalars(select(Schedule).where(Schedule.studentID == 3)).all()
-    print(f"Found {len(r)} entries for {r[0].student.name}")
-    for schedule in r:
-        e = schedule.elective
-        print(f"{e.name} on {e.day} lead by {e.lead}")
+        r = db.session.scalars(select(Schedule).where(Schedule.studentID == 3)).all()
+        print(f"Found {len(r)} entries for {r[0].student.name}")
+        for schedule in r:
+            e = schedule.elective
+            print(f"{e.name} on {e.day} lead by {e.lead}")
 
 # #     db.session.commit()
 #     s = db.select(Elective)
@@ -132,3 +139,21 @@ with app.app_context():
 #         print(x.session.startDate)
 #     pdb.set_trace()
 #     print('woo')
+
+class ConfigUtils():
+    @classmethod
+    def uploadRoster(cls, data=None):
+        if not data:
+            return('error', "No data found")
+
+        r = csv.DictReader(data)
+        for row in r:
+            app.logger.info(row["name"])
+            key = row["name"] + "|" + row["class"] + "|" + row["grade"]
+            md5hash = hashlib.md5(key.encode()).hexdigest()
+            first7 = md5hash[:7]
+            db.session.add(Student(name=row["name"], grade=row["grade"][:1], teacher=row["class"], accessID=first7))
+
+        db.session.commit()
+            
+        return('ok', 'Roster uploaded')
