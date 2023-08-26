@@ -70,6 +70,22 @@ def adminPage():
                 (code, result) = ConfigUtils.uploadRoster(roster)
                 flash(result, code)
                 return redirect(request.url)
+            
+        elif request.form["formID"] == "elective_upload":
+            if 'electives' not in request.files:
+                flash("No electives found", 'error')
+                return redirect(request.url)
+            
+            electives = request.files['electives']
+            if electives.filename == '':
+                flash("No selected file", 'error')
+                return redirect(request.url)
+            
+            electives = map(lambda x: str(x, 'utf-8'), electives)
+            sessionNumber = request.form["sessionNumber"]
+            (code, result) = ConfigUtils.uploadElectives(electives, sessionNumber)
+            flash(result, code)
+            return redirect(request.url)
         else:
             flash("Unknown formID", 'error')
             return redirect(request.url)
@@ -87,7 +103,6 @@ def returnClassFile(classFile=None):
 
 # This is a nice to have at the moment... read all electives at once.
 #    if classFile == "readall":
-        
 
     return send_file("../electives/"+classFile)
 

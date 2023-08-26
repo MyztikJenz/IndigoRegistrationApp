@@ -58,12 +58,29 @@ Also need places to upload student rosters<br>
 Download student selections<br>
 Clear/Reset database of data<br>
 <p>
-    Student count in database: {{ studentCount }}<p>
+    <strong>Roster Upload:</strong> Student count in database: {{ studentCount }}<p>
     <form method=post enctype=multipart/form-data action="/_admin_">
         <input type="hidden" name="formID" value="roster_upload">
         <input type=file name="roster">
         <input type=submit value=Upload>
     </form>
 </p>
+<hr>
+<p>
+    <strong>Elective Upload:</strong><p>
+    <form method=post enctype=multipart/form-data action="/_admin_">
+        <input type="hidden" name="formID" value="elective_upload">
+        Session #: <select name="sessionNumber">
+            <option name="1">1</option>
+            <option name="2">2</option>
+            <option name="3">3</option>
+            <option name="4">4</option>
+        </select>
+        <br>
+        <input type=file name="electives">
+        <input type=submit value=Upload>
+    </form>
+</p>
+
 </body>
 </html>
