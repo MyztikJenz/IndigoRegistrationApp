@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, flash, redirect
+from flask import Flask, request, flash, redirect, send_file
 from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
@@ -76,6 +76,20 @@ def adminPage():
     else:
         studentCount = db.session.query(func.count(Student.id)).scalar()
         return render_template('admin.html', studentCount=studentCount)
+
+@app.route("/class/<classFile>", methods=['GET'])
+def returnClassFile(classFile=None):
+    if not classFile:
+        return "<p>"
+
+    if classFile == "_instruction.html":
+        return "<p>"
+
+# This is a nice to have at the moment... read all electives at once.
+#    if classFile == "readall":
+        
+
+    return send_file("../electives/"+classFile)
 
 # @app.route("/t")
 # @app.route("/t/<varName>")

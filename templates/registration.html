@@ -78,10 +78,8 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
     <script id="rendered-js">
         $(function() {
-            $('.electiveText').hide();
-            $('#classDesc').change(function() {
-                $('.electiveText').hide();
-                $('#' + $(this).val()).show();
+            $('#classDesc2').change(function() {
+                jQuery("#description2").load('/class/' + $(this).val() + '.html');
             });
         });
     </script>
@@ -198,32 +196,14 @@
         <hr style="max-width:350px;margin-left:0px;">
         <h4>Elective Descriptions</h4>
         <div>
-            <select id="classDesc">
-                <option value="selected">Choose an elective to see it's description...</option>
+            <select id="classDesc2">
+                <option value="_instruction">Choose something</option>
                 <option value="class1">Class 1</option>
                 <option value="class2">Class 2</option>
                 <option value="class3">Class 3</option>
-                <option value="class4">PE</option>
             </select>
         </div>
-        <div class="description">
-            <div id="class1" class="electiveText">
-                <h2>Class 1</h2>
-                This is class 1. It'll be fun.
-            </div>
-            <div id="class2" class="electiveText">
-                <h2>Class 2</h2>
-                This one will be even more fun.
-            </div>
-            <div id="class3" class="electiveText">
-                <h2>Class 3</h2>
-                This is class 3. Soooo much fun.
-            </div>
-            <div id="class4" class="electiveText">
-                <h2>PE</h2>
-                Get yo PE on!
-            </div>
-        </div>
+        <div class="description2" id="description2"></div>
     </div>
 
     <div class="previous_sessions">
