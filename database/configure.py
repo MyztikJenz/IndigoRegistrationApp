@@ -14,7 +14,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 
-from sqlalchemy import select
+from sqlalchemy import select, func, and_
 
 import datetime
 import pdb
@@ -93,6 +93,7 @@ with app.app_context():
 # # #    db.create_all()
 # #     # Appears that Flask-SQLAlchemy doesn't support creation of Declarative classes.
 # #     # https://github.com/pallets-eco/flask-sqlalchemy/issues/1140
+
     doDBStuff = False
     if doDBStuff:
         Base.metadata.create_all(db.engine)
@@ -138,6 +139,19 @@ with app.app_context():
             print(f"{e.name} on {se.day} lead by {e.lead}")
 
 ####################################################################################
+
+class RegistrationTools():
+    # Returns the current enrollment of all SessionElectives. If there are none enrolled, no key/value pair exists
+    # TODO - jimt - There has got to be a way to return this count with the list of SessionElectives, but hell if I know how to do it in SQLAlchemy.
+    @classmethod
+    def currentEnrollmentCounts(cls):
+        subq = select(Schedule.sessionElectiveID, func.count("*").label("count")).select_from(Schedule).group_by(Schedule.sessionElectiveID)
+        result = db.session.execute(subq).fetchall()
+        counts = {}
+        for xx in result:
+            counts[xx[0]] = xx[1]
+
+        return counts
 
 class ConfigUtils():
     @classmethod
