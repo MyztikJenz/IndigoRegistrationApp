@@ -208,7 +208,7 @@ class RegistrationTools():
         subq = select(func.count(Schedule.studentID)).select_from(Schedule).join(SessionElective).where(Schedule.studentID == student.id)\
                                                                            .join(Session).where(SessionElective.session == session)
         count = db.session.scalar(subq)
-        return (count >= 8) # Should be just 8 but testing messes things up sometimes
+        return (count >= 7) # Should be just 8 but testing messes things up sometimes
 
     # Returns a list of SessionElective objects
     @classmethod

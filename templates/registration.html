@@ -139,7 +139,8 @@
                     return false
                 }
 
-                return true
+                shouldSubmit = window.confirm("Are you sure these are the electives you want? Click 'OK' if they are.")
+                return shouldSubmit
             });
         });
 
