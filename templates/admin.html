@@ -58,6 +58,9 @@ Also need places to upload student rosters<br>
 Download student selections<br>
 Clear/Reset database of data<br>
 <p>
+    Generally speaking, go in the order presented here otherwise you'll probably encounter errors (some tables need data from the ones before it)
+</p>
+<p>
     <strong>Session Upload:</strong><p>
     <form method=post enctype=multipart/form-data action="/_admin_">
         <input type="hidden" name="formID" value="session_upload">
@@ -87,6 +90,23 @@ Clear/Reset database of data<br>
         </select>
         <br>
         <input type=file name="electives">
+        <input type=submit value=Upload>
+    </form>
+</p>
+<hr style="max-width:350px;margin-left:0px;">
+<p>
+    <strong>Specific Assignment Upload:</strong><p>
+        When you need to assign students to specific classes. The file you upload here must have student names that match exactly to the roster.
+    <form method=post enctype=multipart/form-data action="/_admin_">
+        <input type="hidden" name="formID" value="specific_assignment">
+        Session #: <select name="sessionNumber">
+            <option name="1">1</option>
+            <option name="2">2</option>
+            <option name="3">3</option>
+            <option name="4">4</option>
+        </select>
+        <br>
+        <input type=file name="assignments">
         <input type=submit value=Upload>
     </form>
 </p>

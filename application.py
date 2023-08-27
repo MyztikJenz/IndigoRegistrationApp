@@ -179,6 +179,22 @@ def adminPage():
             (code, result) = ConfigUtils.uploadElectives(electives, sessionNumber)
             flash(result, code)
             return redirect(request.url)
+
+        elif request.form["formID"] == "specific_assignment":
+            if 'assignments' not in request.files:
+                flash("No assignments found", 'error')
+                return redirect(request.url)
+            
+            assignments = request.files['assignments']
+            if assignments.filename == '':
+                flash("No selected file", 'error')
+                return redirect(request.url)
+            
+            assignments = map(lambda x: str(x, 'utf-8'), assignments)
+            sessionNumber = request.form["sessionNumber"]
+            (code, result) = ConfigUtils.uploadSpecificAssignments(assignments, sessionNumber)
+            flash(result, code)
+            return redirect(request.url)
         else:
             flash("Unknown formID", 'error')
             return redirect(request.url)
@@ -240,6 +256,17 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+#     currentSession = RegistrationTools.activeSession()
+#     subq = select(SessionElective).select_from(Elective).where(Elective.name.startswith("Ba")).join(SessionElective)\
+#                                                         .where(SessionElective.electiveID == Elective.id)\
+#                                                         .where(SessionElective.rotation == 1)\
+#                                                         .where(SessionElective.day == "Monday")\
+#                                                         .join(Session).where(SessionElective.session == currentSession)
+#     print(subq)
+#     result = db.session.execute(subq).scalar_one_or_none()
+#     print(result)
+#     print(result.elective.name)
+#     pdb.set_trace()
 #     currentSession = RegistrationTools.activeSession()
 
 #     sel = select(Student).where(Student.accessID == 'sjdhfd')
