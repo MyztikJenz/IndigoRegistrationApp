@@ -14,7 +14,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, delete
 
 import datetime
 import pdb
@@ -94,6 +94,11 @@ class Schedule(Base):
     sessionElectiveID: Mapped[int] = mapped_column(ForeignKey("sessionelectives.id"))
     sessionElective: Mapped["SessionElective"] = relationship(SessionElective, lazy="joined")
 
+class AssignedClasses(Base):
+    __tablename__ = "assignedclasses"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    studentID: Mapped[int]
+    sessionElectiveID: Mapped[int]
 
 with app.app_context():
 # # #    db.create_all()
@@ -199,6 +204,11 @@ class RegistrationTools():
         student.schedule.extend(schedule)
         db.session.commit()
 
+        # Assuming it all went well, drop from AssignedClasses any entries, if any. 
+        stmt = delete(AssignedClasses).where(AssignedClasses.studentID == student.id)
+        db.session.execute(stmt)
+        db.session.commit()
+
         return('ok', "Registered!")
     
     @classmethod
@@ -223,6 +233,17 @@ class RegistrationTools():
         result = db.session.scalars(subq).fetchall()
         return result
 
+    @classmethod
+    def findScheduledClasses(cls, student):
+        subq = select(AssignedClasses).where(AssignedClasses.studentID == student.id)
+        result = db.session.scalars(subq).fetchall()
+        if len(result) > 0:
+            seIDs = list(map(lambda e: e.sessionElectiveID ,result))
+            subq = select(SessionElective).where(SessionElective.id.in_(seIDs))
+            result = db.session.scalars(subq).fetchall()
+            return result
+        else:
+            return None
 
 class ConfigUtils():
     @classmethod
@@ -309,7 +330,6 @@ class ConfigUtils():
             return('error', "Session number is required")
         
         session = db.session.scalars(select(Session).where(Session.number == sessionNumber)).first()
-
         countOfAssignments = 0
         r = csv.DictReader(data)
         for row in r:
@@ -335,12 +355,53 @@ class ConfigUtils():
                     if not se:
                         db.session.rollback()
                         return('error', f"Could not find a matching elective name starting with {electiveName} on {day} rotation {row['rotation']}")
-    
-                    s = Schedule(sessionElective=se)
-                    scheduledElectives.append(s)
+                    assignment = AssignedClasses(studentID=student.id, sessionElectiveID=se.id)
+                    db.session.add(assignment)
                     countOfAssignments += 1
-            
-            student.schedule.extend(scheduledElectives)
 
         db.session.commit()
         return('ok', f"Performed {countOfAssignments} assignments.")
+        
+    # @classmethod
+    # def old_uploadSpecificAssignments(cls, data=None, sessionNumber=None):
+    #     if not data:
+    #         return('error', "No data found")
+    #     if not sessionNumber:
+    #         return('error', "Session number is required")
+        
+    #     session = db.session.scalars(select(Session).where(Session.number == sessionNumber)).first()
+
+    #     countOfAssignments = 0
+    #     r = csv.DictReader(data)
+    #     for row in r:
+    #         # Find the student and the elective they need to take.
+    #         sel = select(Student).where(Student.name == row["student"])
+    #         r = db.session.execute(sel)
+    #         student = r.scalar_one_or_none()
+    #         if not student:
+    #             db.session.rollback()
+    #             return('error', f"Could not find a student record for {row['student']}")
+
+    #         scheduledElectives = []
+    #         for day in ["Monday", "Wednesday", "Thursday", "Friday"]:
+    #             electiveName = row[day]
+    #             if electiveName:
+    #                 subq = select(SessionElective).select_from(Elective).where(Elective.name.startswith(electiveName)).join(SessionElective)\
+    #                                                                     .where(SessionElective.electiveID == Elective.id)\
+    #                                                                     .where(SessionElective.rotation == int(row["rotation"]))\
+    #                                                                     .where(SessionElective.day == day)\
+    #                                                                     .join(Session).where(SessionElective.session == session)
+
+    #                 se = db.session.execute(subq).scalar_one_or_none()
+    #                 if not se:
+    #                     db.session.rollback()
+    #                     return('error', f"Could not find a matching elective name starting with {electiveName} on {day} rotation {row['rotation']}")
+    
+    #                 s = Schedule(sessionElective=se)
+    #                 scheduledElectives.append(s)
+    #                 countOfAssignments += 1
+            
+    #         student.schedule.extend(scheduledElectives)
+
+    #     db.session.commit()
+    #     return('ok', f"Performed {countOfAssignments} assignments.")

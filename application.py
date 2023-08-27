@@ -97,21 +97,74 @@ def registrationPage(accessID=None):
 
     # END if request.method == "POST":
 
+    # Does the student already have classes enrolled? If so, those are mandatory and need to replace any options they may have.
+    # This is terribly gross. I'm sure there's a more elegant way of doing this, but I don't see it at the moment.
+    all_mandatory_electives = RegistrationTools.findScheduledClasses(student)
+    if not all_mandatory_electives:
+        all_mandatory_electives = [] # if there's no scheduled classes, make the filter happy
+
     # TODO - jimt - Would be nice if the classes were ordered alphabetically
 
-    mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation == 1, electives))
-    mon_r2 = list(filter(lambda e: e.day == "Monday" and e.rotation == 2, electives))
-    wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 1, electives))
-    wed_r2 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 2, electives))
-    thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 1, electives))
-    thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 2, electives))
-    fri_r1 = list(filter(lambda e: e.day == "Friday" and e.rotation == 1, electives))
-    fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation == 2, electives))
+    mon_r1_mandatory = list(filter(lambda e: e.day == "Monday" and e.rotation == 1, all_mandatory_electives))
+    if len(mon_r1_mandatory) > 0:
+        mon_r1 = mon_r1_mandatory
+    else:
+        mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
 
-    mon_r3 = list(filter(lambda e: e.day == "Monday" and e.rotation == 3, electives))
-    wed_r3 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 3, electives))
-    thu_r3 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 3, electives))
-    fri_r3 = list(filter(lambda e: e.day == "Friday" and e.rotation == 3, electives))
+    mon_r2_mandatory = list(filter(lambda e: e.day == "Monday" and e.rotation == 2, all_mandatory_electives))
+    if len(mon_r2_mandatory) > 0:
+        mon_r2 = mon_r2_mandatory
+    else:
+        mon_r2 = list(filter(lambda e: e.day == "Monday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
+
+    wed_r1_mandatory = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 1, all_mandatory_electives))
+    if len(wed_r1_mandatory) > 0:
+        wed_r1 = wed_r1_mandatory
+    else:
+        wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
+
+    wed_r2_mandatory = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 2, all_mandatory_electives))
+    if len(wed_r2_mandatory) > 0:
+        wed_r2 = wed_r2_mandatory
+    else:
+        wed_r2 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
+
+    thu_r1_mandatory = list(filter(lambda e: e.day == "Thursday" and e.rotation == 1, all_mandatory_electives))
+    if len(thu_r1_mandatory) > 0:
+        thu_r1 = thu_r1_mandatory
+    else:
+        thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
+  
+    thu_r2_mandatory = list(filter(lambda e: e.day == "Thursday" and e.rotation == 2, all_mandatory_electives))
+    if len(thu_r2_mandatory) > 0:
+        thu_r2 = thu_r2_mandatory
+    else:
+        thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
+
+    fri_r1_mandatory = list(filter(lambda e: e.day == "Friday" and e.rotation == 1, all_mandatory_electives))
+    if len(fri_r1_mandatory) > 0:
+        fri_r1 = fri_r1_mandatory
+    else:
+        fri_r1 = list(filter(lambda e: e.day == "Friday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
+
+    fri_r2_mandatory = list(filter(lambda e: e.day == "Friday" and e.rotation == 2, all_mandatory_electives))
+    if len(fri_r2_mandatory) > 0:
+        fri_r2 = fri_r2_mandatory
+    else:
+        fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
+
+    mon_r3 = wed_r3 = thu_r3 = fri_r3 = []
+    if len(mon_r1_mandatory) == 0 and len(mon_r2_mandatory) == 0:
+        mon_r3 = list(filter(lambda e: e.day == "Monday" and e.rotation == 3, electives))
+
+    if len(wed_r1_mandatory) == 0 and len(wed_r2_mandatory) == 0:
+        wed_r3 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 3, electives))
+    
+    if len(thu_r1_mandatory) == 0 and len(thu_r2_mandatory) == 0:
+        thu_r3 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 3, electives))
+
+    if len(fri_r1_mandatory) == 0 and len(fri_r2_mandatory) == 0:
+        fri_r3 = list(filter(lambda e: e.day == "Friday" and e.rotation == 3, electives))
 
     # TODO - jimt - Any electives that contain "exclusions", students that should not be placed together and are alread in a class
 
@@ -256,6 +309,28 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+#     stmt = delete(AssignedClasses).where(AssignedClasses.studentID == 15)
+#     db.session.execute(stmt)    
+#     db.session.commit()
+
+#     sel = select(Student).where(Student.accessID == 'bab3e0d')
+#     r = db.session.execute(sel)
+#     student = r.scalar_one_or_none()
+#     result = RegistrationTools.findScheduledClasses(student)
+#     print(result)
+#     pdb.set_trace()
+#     currentSession = RegistrationTools.activeSession()
+#     subq = select(SessionElective).select_from(Schedule).where(Schedule.student == student).join(SessionElective)\
+#                                                         .where(Schedule.sessionElectiveID == SessionElective.id)\
+#                                                         .where(SessionElective.day == "Monday")\
+#                                                         .where(SessionElective.rotation == 1)\
+#                                                         .join(Session).where(SessionElective.session == currentSession)
+#     print(subq)
+#     result = db.session.scalars(subq).fetchall()
+#     print(result)
+#     pdb.set_trace()
+#     print(result[0].elective.name)
+
 #     currentSession = RegistrationTools.activeSession()
 #     subq = select(SessionElective).select_from(Elective).where(Elective.name.startswith("Ba")).join(SessionElective)\
 #                                                         .where(SessionElective.electiveID == Elective.id)\

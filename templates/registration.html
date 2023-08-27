@@ -139,6 +139,31 @@
                     return false
                 }
 
+                sameDaysWarning = ""
+                days = ["monday", "wednesday", "thursday", "friday"]
+                multirotationOKClasses = ["PE", "Studio Art", "2D Art", "3D Art"]
+                days.forEach(function(day) {
+                    s1 = "#"+day+"_rotation_1"
+                    s2 = "#"+day+"_rotation_2"
+
+                    s1_txt = $("option:selected", s1).text().trim().replace(/\s*\(\d+ left\)/, "")
+                    s2_txt = $("option:selected", s2).text().trim().replace(/\s*\(\d+ left\)/, "")
+
+                    if (!multirotationOKClasses.includes(s1_txt) && s1_txt == s2_txt) {
+                        if (sameDaysWarning.length == 0) {
+                            sameDaysWarning = "You have the same elective picked for both rotations on the following days:\n\n"
+                        }
+                        sameDaysWarning += "\t" + day.charAt(0).toUpperCase() + day.slice(1) + "\n"
+                    }
+                });
+                if (sameDaysWarning.length > 0) {
+                    sameDaysWarning += "\nThis is not forbidden, but you might be a little bored doing the same elective twice in a row. You sure you're OK with this?"
+                    okWithDupes = window.confirm(sameDaysWarning)
+                    if (!okWithDupes) {
+                        return false
+                    }
+                }
+
                 shouldSubmit = window.confirm("Are you sure these are the electives you want? Click 'OK' if they are.")
                 return shouldSubmit
             });
