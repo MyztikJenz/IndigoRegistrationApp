@@ -7,8 +7,20 @@ from sqlalchemy import select, func
 
 import logging
 import pprint
+import json
 
 from database.configure import *
+
+### 
+### What's left
+# Elective Descriptions
+# Admin functionality to get things started
+# Output of schedules
+# Knowing which kids have yet to fill something out.
+# testing
+
+# Notes
+# In session 2, we can use the AssignedClasses infrastructure to pull "part 2" electives out and auto-assign them.
 
 @app.route("/")
 def hello_world():
@@ -166,6 +178,11 @@ def registrationPage(accessID=None):
     if len(fri_r1_mandatory) == 0 and len(fri_r2_mandatory) == 0:
         fri_r3 = list(filter(lambda e: e.day == "Friday" and e.rotation == 3, electives))
 
+    electiveDescriptions = ""
+    with open("electives/classes.json", 'r', encoding='utf-8') as f:
+        electiveDescriptions = json.load(f)
+    electiveDescriptions = sorted(electiveDescriptions, key=lambda d: d['v'])
+
     # TODO - jimt - Any electives that contain "exclusions", students that should not be placed together and are alread in a class
 
     return render_template('registration.html', student=student, currentEnrollment=currentEnrollment, session=currentSession,
@@ -177,7 +194,8 @@ def registrationPage(accessID=None):
                                                 mon_r3_electives=mon_r3,
                                                 wed_r3_electives=wed_r3,
                                                 thu_r3_electives=thu_r3,
-                                                fri_r3_electives=fri_r3
+                                                fri_r3_electives=fri_r3,
+                                                electiveDescriptions=electiveDescriptions
                                                 )
 
 @app.route("/_admin_", methods=['GET', 'POST'])
@@ -309,6 +327,13 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+#     electiveDescriptions = ""
+#     with open("electives/classes.json", 'r', encoding='utf-8') as f:
+#         electiveDescriptions = json.load(f)
+#     electiveDescriptions = sorted(electiveDescriptions, key=lambda d: d['v'])
+#     pprint.pprint(electiveDescriptions)
+#     pdb.set_trace()
+
 #     stmt = delete(AssignedClasses).where(AssignedClasses.studentID == 15)
 #     db.session.execute(stmt)    
 #     db.session.commit()

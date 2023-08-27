@@ -82,6 +82,18 @@
         select {
             min-width: 100px;
         }
+
+        .description2 {
+            max-width: 600px;
+            padding: 8px;
+        }
+        pre {
+            max-width: 600px;
+            overflow-y:scroll;
+            white-space: pre-wrap;
+            font: normal normal 14px/1.2 'Helvetica Neue', Arial, sans-serif;
+
+        }
     </style>
 
     <noscript>
@@ -378,9 +390,9 @@
         <div>
             <select id="classDesc2">
                 <option value="_instruction">Choose something</option>
-                <option value="class1">Class 1</option>
-                <option value="class2">Class 2</option>
-                <option value="class3">Class 3</option>
+                {% for dict in electiveDescriptions %}
+                    <option value="{{ dict.k }}">{{ dict.v }}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="description2" id="description2"></div>
