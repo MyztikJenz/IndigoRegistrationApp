@@ -93,6 +93,21 @@ with app.app_context():
 # # #    db.create_all()
 # #     # Appears that Flask-SQLAlchemy doesn't support creation of Declarative classes.
 # #     # https://github.com/pallets-eco/flask-sqlalchemy/issues/1140
+    # q = select(Session).where(Session.active == True)
+    # currentSession = db.session.execute(q).scalar_one_or_none()
+
+    # sel = select(SessionElective).where(SessionElective.session == currentSession)
+    # r = db.session.scalars(sel)
+    # electives = r.fetchall()
+    # print(f"found {len(electives)}")
+    # for se in electives:
+    #     e = se.elective
+    #     print(f"day: {se.day} rotation: {se.rotation} name: {e.name}")
+
+    # mon_r1 = filter(lambda e: e.day == "Monday" and e.rotation == 1, electives)
+    # for se in mon_r1:
+    #     e = se.elective
+    #     print(f"day: {se.day} rotation: {se.rotation} name: {e.name}")
 
     doDBStuff = False
     if doDBStuff:
@@ -141,17 +156,30 @@ with app.app_context():
 ####################################################################################
 
 class RegistrationTools():
-    # Returns the current enrollment of all SessionElectives. If there are none enrolled, no key/value pair exists
+    # Returns the current enrollment of all SessionElectives. 
+    # Requires you pass in a list of SessionElectives
     # TODO - jimt - There has got to be a way to return this count with the list of SessionElectives, but hell if I know how to do it in SQLAlchemy.
     @classmethod
-    def currentEnrollmentCounts(cls):
+    def currentEnrollmentCounts(cls, sessionElectives):
         subq = select(Schedule.sessionElectiveID, func.count("*").label("count")).select_from(Schedule).group_by(Schedule.sessionElectiveID)
-        result = db.session.execute(subq).fetchall()
+        result = dict(db.session.execute(subq).fetchall())
+
         counts = {}
-        for xx in result:
-            counts[xx[0]] = xx[1]
+        for se in sessionElectives:
+            enrolled = 0
+            if se.id in result:
+                enrolled = result[se.id]
+
+            counts[se.id] = { 'enrolled': enrolled, 'remaining': se.elective.maxAttendees - enrolled }
 
         return counts
+    
+    @classmethod
+    def activeSession(cls):
+        q = select(Session).where(Session.active == True)
+        result = db.session.execute(q).scalar_one_or_none()
+        return result
+
 
 class ConfigUtils():
     @classmethod
