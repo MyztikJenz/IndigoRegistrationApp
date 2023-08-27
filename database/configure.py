@@ -50,9 +50,9 @@ class Student(Base):
     __tablename__ = "students"
     id: Mapped[int] = mapped_column(primary_key=True)
     accessID: Mapped[str] = mapped_column(String(32), unique=True)
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True)
     grade: Mapped[int]
-    teacher: Mapped[str]
+    teacher: Mapped[str] = mapped_column(String(128))
     schedule: Mapped[List["Schedule"]] = relationship(back_populates="student")
 
 class Session(Base):
@@ -66,11 +66,11 @@ class Session(Base):
 class Elective(Base):
     __tablename__ = "electives"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True)
-    lead: Mapped[str]
+    name: Mapped[str] = mapped_column(String(256), unique=True)
+    lead: Mapped[str] = mapped_column(String(128))
     maxAttendees: Mapped[int]
     multisession: Mapped[bool]
-    room: Mapped[str]
+    room: Mapped[str] = mapped_column(String(128))
     consideredPE: Mapped[bool]
 
 class SessionElective(Base):
@@ -78,7 +78,7 @@ class SessionElective(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     sessionID: Mapped[int] = mapped_column(ForeignKey("sessions.id"))
     electiveID: Mapped[int] = mapped_column(ForeignKey("electives.id"))
-    day: Mapped[str]
+    day: Mapped[str] = mapped_column(String(32))
     rotation: Mapped[int]
     session: Mapped["Session"] = relationship(back_populates="electives")
     elective: Mapped["Elective"] = relationship(Elective, lazy="joined")
