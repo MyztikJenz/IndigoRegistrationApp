@@ -199,6 +199,28 @@ class RegistrationTools():
         db.session.commit()
 
         return('ok', "Registered!")
+    
+    @classmethod
+    def studentEnrolledForSession(cls, student, session=None):
+        if not session:
+            session = RegistrationTools.activeSession()
+        
+        subq = select(func.count(Schedule.studentID)).select_from(Schedule).join(SessionElective).where(Schedule.studentID == student.id)\
+                                                                           .join(Session).where(SessionElective.session == session)
+        count = db.session.scalar(subq)
+        return (count >= 8) # Should be just 8 but testing messes things up sometimes
+
+    # Returns a list of SessionElective objects
+    @classmethod
+    def chosenElectivesForSessions(cls, student, session=None):
+        if not session:
+            session = RegistrationTools.activeSession()
+
+        subq = select(SessionElective).select_from(Schedule).join(SessionElective).where(Schedule.studentID == student.id)\
+                                                            .join(Session).where(SessionElective.session == session)
+        result = db.session.scalars(subq).fetchall()
+        return result
+
 
 class ConfigUtils():
     @classmethod

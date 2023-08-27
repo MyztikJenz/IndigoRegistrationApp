@@ -36,6 +36,10 @@ def registrationPage(accessID=None):
     r = db.session.scalars(sel)
     electives = r.fetchall()
 
+    isEnrolledForSession = RegistrationTools.studentEnrolledForSession(student, currentSession)
+    if isEnrolledForSession:
+        return showSchedule(student, currentSession)
+
     # the count of seats already occupied
     currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)
 
@@ -84,7 +88,7 @@ def registrationPage(accessID=None):
             (code, result) = RegistrationTools.registerStudent(student, studentElectives)
 
             if (code == "ok"):
-                return "Congrats! You are registered!"
+                return showSchedule(student, currentSession, studentElectives)
             else:
                 # Something has gone pretty wrong at this point. Database has failed to accept the addition.
                 err = f"Failed to save results: {result}"
@@ -195,6 +199,29 @@ def returnClassFile(classFile=None):
 
     return send_file("../electives/"+classFile)
 
+# Not a flask route. Only called internally, but from inside flask contexts.
+# This function needs to return to its caller what it wants to show on the screen.
+def showSchedule(student, session=None, electives=None):
+    if not session:
+        session = RegistrationTools.activeSession
+    
+    if not electives:
+        electives = RegistrationTools.chosenElectivesForSessions(student, session)
+
+    mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation in [1,3], electives))[0]
+    wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [1,3], electives))[0]
+    thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [1,3], electives))[0]
+    fri_r1 = list(filter(lambda e: e.day == "Friday" and e.rotation in [1,3], electives))[0]
+    mon_r2 = list(filter(lambda e: e.day == "Monday" and e.rotation in [2,3], electives))[0]
+    wed_r2 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [2,3], electives))[0]
+    thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [2,3], electives))[0]
+    fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation in [2,3], electives))[0]
+
+    return render_template('schedule.html', student=student, session=session,
+                                            mon_r1=mon_r1, wed_r1=wed_r1, thu_r1=thu_r1, fri_r1=fri_r1, 
+                                            mon_r2=mon_r2, wed_r2=wed_r2, thu_r2=thu_r2, fri_r2=fri_r2 
+                                            )
+
 # @app.route("/t")
 # @app.route("/t/<varName>")
 # def show_template(varName=None):
@@ -214,6 +241,22 @@ def returnClassFile(classFile=None):
 
 # with app.app_context():
 #     currentSession = RegistrationTools.activeSession()
+
+#     sel = select(Student).where(Student.accessID == 'sjdhfd')
+#     r = db.session.execute(sel)
+#     student = r.scalar_one_or_none()
+
+
+# #    subq = select(Schedule.sessionElectiveID, func.count("*").label("count")).select_from(Schedule).group_by(Schedule.sessionElectiveID).where(and_(Schedule.studentID == student.id, Schedule.sessionElective.sessionID == currentSession.id))
+#     subq = select(SessionElective).select_from(Schedule).join(SessionElective).where(Schedule.studentID == student.id)\
+#     .join(Session).where(SessionElective.session == currentSession)
+#                                                                             #.where(Schedule.sessionElectiveID == currentSession.id)
+#     print(subq)
+#     result = db.session.scalars(subq).fetchall()
+#     print(result)
+#     for x in result:
+#         print(x.elective.name)
+#     pdb.set_trace()
 #     # A list of electives for the current session
 #  #   sessionNumber = 1
 
