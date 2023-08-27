@@ -16,7 +16,7 @@ def hello_world():
     return str
 
 @app.route("/x")
-@app.route("/x/<accessID>")
+@app.route("/x/<accessID>", methods=['GET', 'POST'])
 def registrationPage(accessID=None):
     if not accessID:
         return "<p>" # show nothing if someone just happens to find this page and doesn't provide an accessID
@@ -28,10 +28,10 @@ def registrationPage(accessID=None):
         return "<p>invalid access ID</p>", 401
     
     # Need...
+    # The current session
     currentSession = RegistrationTools.activeSession()
-    # A list of electives for the current session
- #   sessionNumber = 1
 
+    # A list of electives for the current session
     sel = select(SessionElective).where(SessionElective.session == currentSession)
     r = db.session.scalars(sel)
     electives = r.fetchall()
@@ -39,13 +39,59 @@ def registrationPage(accessID=None):
     # the count of seats already occupied
     currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)
 
-    # for se in electives:
-    #     if se.id in currentEnrollment:
-    #         app.logger.info(f"Found elective with enrollment")
+    previousForm = {}
+    errors = []
+    if request.method == "POST":
+        # Did they select enough PE?
+        PE_electives = list(filter(lambda e: e.elective.consideredPE, electives))
+        PE_electiveIDs = list(map(lambda e: e.id, PE_electives))
+        PE_count = 0
 
+        # Did rotation=3 electives stay together (rotation1 and rotation2 need to match)
+        R3_electives = list(filter(lambda e: e.rotation == 3, electives))
+        RE_electiveIDs = list(map(lambda e: e.id, R3_electives))
 
+        studentElectivesIDs = []
+        for key in request.form:
+            esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
+            studentElectivesIDs.append(esID)
 
+            if esID in PE_electiveIDs:
+                PE_count += 1
 
+            if esID in RE_electiveIDs:
+                partnerKey = key.replace("1","2") # Assume our id ends in 1
+                if key[-1] == "2":
+                    partnerKey = key.replace("2", "1")
+                if request.form[key] != request.form[partnerKey]:
+                    brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
+                    errors.append(f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective.")
+
+            # Did a class fill up between the form being loaded and submitted?
+            if currentEnrollment[esID]["remaining"] == 0:
+                fullElective = list(filter(lambda e: e.id == esID, electives))[0]
+                errors.append(f"The class '{fullElective.elective.name}' is now full. Please choose another.")
+
+        if PE_count < 3:
+            errors.append(f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈.")
+
+#        errors.append("This is a test error")
+        if len(errors) > 0:
+            previousForm = request.form
+        else:
+            # There are no errors! We can submit their schedule and show them the good news.
+            studentElectives = list(filter(lambda e: e.id in studentElectivesIDs, electives))
+            (code, result) = RegistrationTools.registerStudent(student, studentElectives)
+
+            if (code == "ok"):
+                return "Congrats! You are registered!"
+            else:
+                # Something has gone pretty wrong at this point. Database has failed to accept the addition.
+                err = f"Failed to save results: {result}"
+                app.logger.error(err)
+                return err
+
+    # END if request.method == "POST":
 
     # TODO - jimt - Would be nice if the classes were ordered alphabetically
 
@@ -63,10 +109,10 @@ def registrationPage(accessID=None):
     thu_r3 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 3, electives))
     fri_r3 = list(filter(lambda e: e.day == "Friday" and e.rotation == 3, electives))
 
-    # Any electives that contain "exclusions", students that should not be placed together and are alread in a class
-    #
+    # TODO - jimt - Any electives that contain "exclusions", students that should not be placed together and are alread in a class
 
-    return render_template('registration.html', student=student, currentEnrollment=currentEnrollment,
+    return render_template('registration.html', student=student, currentEnrollment=currentEnrollment, session=currentSession,
+                                                previousForm=previousForm, errors=errors,
                                                 mon_r1_electives=mon_r1, mon_r2_electives=mon_r2,
                                                 wed_r1_electives=wed_r1, wed_r2_electives=wed_r2,
                                                 thu_r1_electives=thu_r1, thu_r2_electives=thu_r2,
@@ -166,7 +212,7 @@ def returnClassFile(classFile=None):
 
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
-#with app.app_context():
+# with app.app_context():
 #     currentSession = RegistrationTools.activeSession()
 #     # A list of electives for the current session
 #  #   sessionNumber = 1
@@ -177,6 +223,9 @@ def returnClassFile(classFile=None):
 
 #     # the count of seats already occupied
 #     currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)
+
+#     x = 64
+#     print(currentEnrollment[x]["remaining"])
 #     pprint.pprint(currentEnrollment)
 #    db.create_all()
 

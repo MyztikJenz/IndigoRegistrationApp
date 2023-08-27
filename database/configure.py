@@ -58,6 +58,7 @@ class Student(Base):
 class Session(Base):
     __tablename__ = "sessions"
     id: Mapped[int] = mapped_column(primary_key=True)
+    number: Mapped[int]
     startDate: Mapped[datetime.date]
     endDate: Mapped[datetime.date]
     active: Mapped[bool]
@@ -186,6 +187,19 @@ class RegistrationTools():
         return result
 
 
+    @classmethod
+    def registerStudent(cls, student, electives):
+        schedule = []
+        for se in electives:
+            s = Schedule(sessionElective=se)
+            schedule.append(s)
+
+        #TODO - jimt - If this ever gets re-run, it'll extend instead of replace. Probably should replace.
+        student.schedule.extend(schedule)
+        db.session.commit()
+
+        return('ok', "Registered!")
+
 class ConfigUtils():
     @classmethod
     def uploadSessions(cls, data=None):
@@ -197,7 +211,7 @@ class ConfigUtils():
         for row in r:
             startDate = datetime.datetime.strptime(row["startDate"], date_format)
             endDate = datetime.datetime.strptime(row["endDate"], date_format)
-            db.session.add(Session(startDate=startDate, endDate=endDate, active=(row["active"]=="TRUE")))
+            db.session.add(Session(number=int(row["sessionNumber"]), startDate=startDate, endDate=endDate, active=(row["active"]=="TRUE")))
 
         db.session.commit()
             
@@ -211,7 +225,7 @@ class ConfigUtils():
 
         r = csv.DictReader(data)
         for row in r:
-            app.logger.info(row["name"])
+#            app.logger.info(row["name"])
             key = row["name"] + "|" + row["class"] + "|" + row["grade"]
             md5hash = hashlib.md5(key.encode()).hexdigest()
             first7 = md5hash[:7]
