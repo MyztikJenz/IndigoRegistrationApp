@@ -26,6 +26,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Template folder location is relative to the file that creates the app (which is this file)
 application = app = Flask(__name__, template_folder="../templates")
+app.config["SECRET_KEY"] = "***REMOVED***"
 
 # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
 db_username = os.environ["RDS_USERNAME"]
@@ -34,9 +35,12 @@ db_host     = os.environ["RDS_HOSTNAME"]
 db_port     = int(os.environ["RDS_PORT"])
 db_name     = os.environ["RDS_DB_NAME"]
 
-#app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///dbtest.sqlite"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///electivetest1.sqlite"
-# app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+# A environmental key is set on the ElasticBeanstalk instance to let us know when this code is running local vs in AWS
+if "INDIGO_AWS" in os.environ:
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///electivetest1.sqlite"
+
 db = SQLAlchemy(app)
 
 class Base(DeclarativeBase):
@@ -109,49 +113,50 @@ with app.app_context():
     #     e = se.elective
     #     print(f"day: {se.day} rotation: {se.rotation} name: {e.name}")
 
-    doDBStuff = False
+    doDBStuff = True
+    insertTestData = False
     if doDBStuff:
         Base.metadata.create_all(db.engine)
 
+        if insertTestData:
+            db.session.add(Student(name="Jake Turner", grade=6, teacher="Ruiz", accessID="sjdhfd"))
+            db.session.add(Student(name="Mike Smith", grade=7, teacher="Vong", accessID="xxx888"))
+            jim = Student(name="Jim Turner", grade=6, teacher="Ruiz", accessID="999771")
+            db.session.add(jim)
 
-        db.session.add(Student(name="Jake Turner", grade=6, teacher="Ruiz", accessID="sjdhfd"))
-        db.session.add(Student(name="Mike Smith", grade=7, teacher="Vong", accessID="xxx888"))
-        jim = Student(name="Jim Turner", grade=6, teacher="Ruiz", accessID="999771")
-        db.session.add(jim)
+            s1 = Session(startDate=datetime.date(2023,9,5), endDate=datetime.date(2023,11,5), active=True)
+            db.session.add(s1)
+            s2 = Session(startDate=datetime.date(2023,11,6), endDate=datetime.date(2024,2,5), active=False)
+            db.session.add(s2)
 
-        s1 = Session(startDate=datetime.date(2023,9,5), endDate=datetime.date(2023,11,5), active=True)
-        db.session.add(s1)
-        s2 = Session(startDate=datetime.date(2023,11,6), endDate=datetime.date(2024,2,5), active=False)
-        db.session.add(s2)
+            e1 = Elective(name="Bob's funhouse", lead="Bob Bobberson", maxAttendees=10, multisession=False, room="P3", consideredPE=False)
+            db.session.add(e1)
+            e2 = Elective(name="Cooking", lead="Joni Cimoli", maxAttendees=8, multisession=False, room="Kitchen", consideredPE=False)
+            db.session.add(e2)
+            e3 = Elective(name="Shoes", lead="Nancy Decker", maxAttendees=10, multisession=False, room="P3", consideredPE=True)
+            db.session.add(e3)
+            db.session.commit()
 
-        e1 = Elective(name="Bob's funhouse", lead="Bob Bobberson", maxAttendees=10, multisession=False, room="P3", consideredPE=False)
-        db.session.add(e1)
-        e2 = Elective(name="Cooking", lead="Joni Cimoli", maxAttendees=8, multisession=False, room="Kitchen", consideredPE=False)
-        db.session.add(e2)
-        e3 = Elective(name="Shoes", lead="Nancy Decker", maxAttendees=10, multisession=False, room="P3", consideredPE=True)
-        db.session.add(e3)
-        db.session.commit()
+            se11 = SessionElective(day="Monday", rotation=1, session=s1, elective=e1)
+            se12 = SessionElective(day="Monday", rotation=2, session=s1, elective=e1)
+            se21 = SessionElective(day="Monday", rotation=1, session=s1, elective=e2)
+            se22 = SessionElective(day="Thursday", rotation=1, session=s1, elective=e2)
+            se31 = SessionElective(day="Wednesday", rotation=1, session=s1, elective=e3)
+            se32 = SessionElective(day="Wednesday", rotation=2, session=s1, elective=e3)
+            db.session.add_all([se11, se12, se21, se22, se31, se32])
+            db.session.commit()
 
-        se11 = SessionElective(day="Monday", rotation=1, session=s1, elective=e1)
-        se12 = SessionElective(day="Monday", rotation=2, session=s1, elective=e1)
-        se21 = SessionElective(day="Monday", rotation=1, session=s1, elective=e2)
-        se22 = SessionElective(day="Thursday", rotation=1, session=s1, elective=e2)
-        se31 = SessionElective(day="Wednesday", rotation=1, session=s1, elective=e3)
-        se32 = SessionElective(day="Wednesday", rotation=2, session=s1, elective=e3)
-        db.session.add_all([se11, se12, se21, se22, se31, se32])
-        db.session.commit()
+            jim.schedule.append(Schedule(sessionElective=se12))
+            jim.schedule.append(Schedule(sessionElective=se22))
+            jim.schedule.append(Schedule(sessionElective=se32))
+            db.session.commit()
 
-        jim.schedule.append(Schedule(sessionElective=se12))
-        jim.schedule.append(Schedule(sessionElective=se22))
-        jim.schedule.append(Schedule(sessionElective=se32))
-        db.session.commit()
-
-        r = db.session.scalars(select(Schedule).where(Schedule.studentID == 3)).all()
-        print(f"Found {len(r)} entries for {r[0].student.name}")
-        for schedule in r:
-            se = schedule.sessionElective
-            e = se.elective
-            print(f"{e.name} on {se.day} lead by {e.lead}")
+            r = db.session.scalars(select(Schedule).where(Schedule.studentID == 3)).all()
+            print(f"Found {len(r)} entries for {r[0].student.name}")
+            for schedule in r:
+                se = schedule.sessionElective
+                e = se.elective
+                print(f"{e.name} on {se.day} lead by {e.lead}")
 
 ####################################################################################
 

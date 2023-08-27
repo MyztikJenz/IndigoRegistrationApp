@@ -10,24 +10,6 @@ import pprint
 
 from database.configure import *
 
-# application = app = Flask(__name__)
-
-# # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
-# db_username = os.environ["RDS_USERNAME"]
-# db_password = os.environ["RDS_PASSWORD"]
-# db_host     = os.environ["RDS_HOSTNAME"]
-# db_port     = int(os.environ["RDS_PORT"])
-# db_name     = os.environ["RDS_DB_NAME"]
-
-# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///dbtest.sqlite"
-app.config["SECRET_KEY"] = "***REMOVED***"
-# app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
-# db = SQLAlchemy(app)
-
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(255), unique=True, nullable=False)
-
 @app.route("/")
 def hello_world():
     str = "<p>Hello, World!</p>"
