@@ -188,6 +188,23 @@ class RegistrationTools():
 
 class ConfigUtils():
     @classmethod
+    def uploadSessions(cls, data=None):
+        if not data:
+            return('error', "No data found")
+        
+        r = csv.DictReader(data)
+        date_format = '%Y-%m-%d'
+        for row in r:
+            startDate = datetime.datetime.strptime(row["startDate"], date_format)
+            endDate = datetime.datetime.strptime(row["endDate"], date_format)
+            db.session.add(Session(startDate=startDate, endDate=endDate, active=(row["active"]=="TRUE")))
+
+        db.session.commit()
+            
+        return('ok', 'Sessions uploaded')
+
+
+    @classmethod
     def uploadRoster(cls, data=None):
         if not data:
             return('error', "No data found")
@@ -217,8 +234,8 @@ class ConfigUtils():
         for row in r:
             app.logger.info(f"{sessionNumber}: {row['name']} - {row['rotations']}")
             # Create an entry into the electives table. It may already exist, so we should consider updating it. 
-            elective = Elective(name=row['name'], lead=row['lead'], maxAttendees=int(row['maxAttendees']), multisession=bool(row["multisession"]), 
-                                room=row["room"], consideredPE=bool(row["consideredPE"]))
+            elective = Elective(name=row['name'], lead=row['lead'], maxAttendees=int(row['maxAttendees']), multisession=(row["multisession"]=="TRUE"), 
+                                room=row["room"], consideredPE=(row["consideredPE"]=="TRUE"))
             db.session.add(elective)
             try:
                 db.session.commit()

@@ -80,6 +80,22 @@ def registrationPage(accessID=None):
 @app.route("/_admin_", methods=['GET', 'POST'])
 def adminPage():
     if request.method == "POST":
+        if request.form["formID"] == "session_upload":
+            if 'sessions' not in request.files:
+                flash("No session found", 'error')
+                return redirect(request.url)
+
+            sessions = request.files['sessions']
+            if sessions.filename == '':
+                flash("No selected file", 'error')
+                return redirect(request.url)
+            
+            sessions = map(lambda x: str(x, 'utf-8'), sessions)
+            (code, result) = ConfigUtils.uploadSessions(sessions)
+            flash(result, code)
+            return redirect(request.url)
+
+
         if request.form["formID"] == "roster_upload":
             if 'roster' not in request.files:
                 flash("No roster found", 'error')
