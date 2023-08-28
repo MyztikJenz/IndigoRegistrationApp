@@ -39,7 +39,7 @@ db_name     = os.environ["RDS_DB_NAME"]
 if "INDIGO_AWS" in os.environ:
     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///rsptest2.sqlite"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///rsptest3.sqlite"
 
 db = SQLAlchemy(app)
 
@@ -305,9 +305,10 @@ class ConfigUtils():
                 db.session.commit()
             except IntegrityError as error:
                 # TODO - jimt - Allow updating entries in the database, not just ignoring.
-                if "UNIQUE constraint failed: electives.name" not in str(error):
+                # Need to catch both sqlite and mysql errors
+                if "UNIQUE constraint failed: electives.name" not in str(error) and "for key 'electives.name'" not in str(error):
                     app.logger.error(error)
-                    return('error', "DB error")
+                    return('error', "DB error: " + str(error))
                 
                 db.session.rollback()
                 # There's already an elective in the database. Get a reference to that one instead.
