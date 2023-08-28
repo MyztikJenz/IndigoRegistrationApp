@@ -277,8 +277,9 @@ class ConfigUtils():
 #            app.logger.info(row["name"])
             key = row["name"] + "|" + row["class"] + "|" + row["grade"]
             md5hash = hashlib.md5(key.encode()).hexdigest()
-            first7 = md5hash[:7]
-            db.session.add(Student(name=row["name"], grade=row["grade"][:1], teacher=row["class"], accessID=first7))
+#            accessID = md5hash[:7]
+            accessID = md5hash[-7:]
+            db.session.add(Student(name=row["name"], grade=row["grade"][:1], teacher=row["class"], accessID=accessID))
 
         db.session.commit()
             
