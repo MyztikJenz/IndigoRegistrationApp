@@ -62,6 +62,9 @@ class Session(Base):
     startDate: Mapped[datetime.date]
     endDate: Mapped[datetime.date]
     active: Mapped[bool]
+    Ruiz: Mapped[bool]
+    Paolini: Mapped[bool]
+    Bishop: Mapped[bool]
     electives: Mapped[List["SessionElective"]] = relationship(back_populates="session")
 
 class Elective(Base):
@@ -256,7 +259,8 @@ class ConfigUtils():
         for row in r:
             startDate = datetime.datetime.strptime(row["startDate"], date_format)
             endDate = datetime.datetime.strptime(row["endDate"], date_format)
-            db.session.add(Session(number=int(row["sessionNumber"]), startDate=startDate, endDate=endDate, active=(row["active"]=="TRUE")))
+            db.session.add(Session(number=int(row["sessionNumber"]), startDate=startDate, endDate=endDate, active=(row["active"]=="TRUE"),
+                                   Ruiz=(row["Ruiz"]=="TRUE"),Paolini=(row["Paolini"]=="TRUE"),Bishop=(row["Bishop"]=="TRUE")))
 
         db.session.commit()
             

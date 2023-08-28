@@ -8,13 +8,14 @@ from sqlalchemy import select, func
 import logging
 import pprint
 import json
+import datetime
 
 from database.configure import *
 
 ### 
 ### What's left
-# Elective Descriptions
-# Admin functionality to get things started
+# x Elective Descriptions
+# x Admin functionality to get things started
 # Output of schedules
 # Knowing which kids have yet to fill something out.
 # testing
@@ -42,6 +43,13 @@ def registrationPage(accessID=None):
     # Need...
     # The current session
     currentSession = RegistrationTools.activeSession()
+
+    # See if this student is allowed to connect. `teacher` is the column name in the DB we key from
+    teacherColumn = getattr(Session, student.teacher)
+    subq = select(teacherColumn).select_from(Session).where(Session.active == True)
+    isAllowToRegister = db.session.scalar(subq)
+    if not isAllowToRegister:
+        return render_template("notyet.html", teacher=student.teacher)
 
     # A list of electives for the current session
     sel = select(SessionElective).where(SessionElective.session == currentSession)
@@ -201,6 +209,15 @@ def registrationPage(accessID=None):
 @app.route("/_admin_", methods=['GET', 'POST'])
 def adminPage():
     if request.method == "POST":
+        # if request.form["formID"] == "startSession":
+        #     sessionNumber = request.form["sessionNumber"]
+        #     sessionStartDate = request.form["sessionStartDate"] + " 07:00:00"
+
+        #     date_format = '%Y-%m-%d %H:%M:%S'
+        #     startDate = datetime.datetime.strptime(sessionStartDate, date_format)
+
+
+
         if request.form["formID"] == "session_upload":
             if 'sessions' not in request.files:
                 flash("No session found", 'error')
@@ -327,6 +344,15 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+    # currentSession = RegistrationTools.activeSession()
+    # col_name = "active"
+    # x = getattr(Session, col_name)
+    # y = select(x).select_from(Session).where(Session.active == True)
+    # print(x)
+    # print(y)
+    # z = db.session.scalar(y)
+    # print(z)
+    # pdb.set_trace()
 #     electiveDescriptions = ""
 #     with open("electives/classes.json", 'r', encoding='utf-8') as f:
 #         electiveDescriptions = json.load(f)

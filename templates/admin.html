@@ -12,16 +12,17 @@
         </ul>
     {% endif %}
 {% endwith %}
-<form>
+<form method=post enctype=multipart/form-data action="/_admin_">
+<input type="hidden" name="formID" value="startSession">
 <table>
     <thead>
-        <td colspan="2">Please be careful here... updating this changes the active session!</td>
+        <td colspan="2"><strong>Please be careful here...</strong> updating this changes the active session!</td>
     </thead>
     <tbody>
         <tr>
             <td>Current Session #</td>
             <td>
-                <select name="sessionNumber">
+                <select id="sessionNumber" name="sessionNumber">
                     <option name="1">1</option>
                     <option name="2">2</option>
                     <option name="3">3</option>
@@ -30,33 +31,29 @@
             </td>    
         </tr>
         <tr>
-            <td>Class order</td>
+            <td style="vertical-align: top;"><label for="sessionStartDate">Registration start date</label>
+                <p>
+                    Order goes:<br>
+                    1: Paolini-Ruiz-Bishop<br>
+                    2: Ruiz-Bishop-Paolini<br>
+                    3: Bishop-Paolini-Ruiz<br>
+                    4: Paolini-Ruiz-Bishop<br>
+                </p>
+            </td>
             <td>
-                <select name="classOrder">
-                    <option name="P-R-V">Paolini-Ruiz-Vong</option>
-                    <option name="R-V-P">Ruiz-Vong-Paolini</option>
-                    <option name="V-P-R">Vong-Paolini-Ruiz</option>
-                </select>
-            </td>    
-        </tr>
-        <tr>
-            <td><label for="sessionStartDate">Start date</label></td>
-            <td>
-                <input type="text" name="sessionStartDate" id="sessionStartDate">
+                <input type="text" name="sessionStartDate" id="sessionStartDate" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}">
             </td>    
         </tr>
         <tr>
             <td>&nbsp;</td>
             <td>
-                <button class="submitButton">Submit</button>
+                <button class="submitButton" type="submit">Submit</button>
             </td>    
         </tr>
     </tbody>
 </table>
 </form>
-Also need places to upload student rosters<br>
-Download student selections<br>
-Clear/Reset database of data<br>
+<hr style="max-width:350px;margin-left:0px;">
 <p>
     Generally speaking, go in the order presented here otherwise you'll probably encounter errors (some tables need data from the ones before it)
 </p>
