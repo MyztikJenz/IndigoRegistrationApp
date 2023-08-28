@@ -235,14 +235,14 @@
                         <td>
                             <select id="monday_rotation_1" name="monday_rotation_1">
                                 {% for sessElec in mon_r1_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.monday_rotation_1 and previousForm.monday_rotation_1|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.monday_rotation_1 and previousForm.monday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if mon_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in mon_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}"  {{ "selected" if previousForm.monday_rotation_1 and previousForm.monday_rotation_1|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}"  {{ "selected" if previousForm.monday_rotation_1 and previousForm.monday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -252,14 +252,14 @@
                         <td>
                             <select id="wednesday_rotation_1" name="wednesday_rotation_1">
                                 {% for sessElec in wed_r1_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_1 and previousForm.wednesday_rotation_1|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_1 and previousForm.wednesday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if wed_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in wed_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_1 and previousForm.wednesday_rotation_1|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_1 and previousForm.wednesday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -269,14 +269,14 @@
                         <td>
                             <select id="thursday_rotation_1" name="thursday_rotation_1">
                                 {% for sessElec in thu_r1_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_1 and previousForm.thursday_rotation_1|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_1 and previousForm.thursday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if thu_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in thu_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_1 and previousForm.thursday_rotation_1|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_1 and previousForm.thursday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -286,14 +286,14 @@
                         <td>
                             <select id="friday_rotation_1" name="friday_rotation_1">
                                 {% for sessElec in fri_r1_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_1 and previousForm.friday_rotation_1|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_1 and previousForm.friday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if fri_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in fri_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_1 and previousForm.friday_rotation_1|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_1 and previousForm.friday_rotation_1|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -306,14 +306,14 @@
                         <td>
                             <select id="monday_rotation_2" name="monday_rotation_2">
                                 {% for sessElec in mon_r2_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.monday_rotation_2 and previousForm.monday_rotation_2|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.monday_rotation_2 and previousForm.monday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if mon_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in mon_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.monday_rotation_2 and previousForm.monday_rotation_2|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.monday_rotation_2 and previousForm.monday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -323,14 +323,14 @@
                         <td>
                             <select id="wednesday_rotation_2" name="wednesday_rotation_2">
                                 {% for sessElec in wed_r2_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_2 and previousForm.wednesday_rotation_2|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_2 and previousForm.wednesday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if wed_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in wed_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_2 and previousForm.wednesday_rotation_2|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.wednesday_rotation_2 and previousForm.wednesday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -340,14 +340,14 @@
                         <td>
                             <select id="thursday_rotation_2" name="thursday_rotation_2">
                                 {% for sessElec in thu_r2_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_2 and previousForm.thursday_rotation_2|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_2 and previousForm.thursday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if thu_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in thu_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_2 and previousForm.thursday_rotation_2|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.thursday_rotation_2 and previousForm.thursday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -357,14 +357,14 @@
                         <td>
                             <select id="friday_rotation_2" name="friday_rotation_2">
                                 {% for sessElec in fri_r2_electives %}
-                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_2 and previousForm.friday_rotation_2|int is eq sessElec.id }}>
+                                    <option {{ "class=PE_elective" if sessElec.elective.consideredPE }} value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_2 and previousForm.friday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                         {{ "🏈" if sessElec.elective.consideredPE }} {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                     </option>
                                 {% endfor %}
                                 {% if fri_r3_electives|length %}
                                     <optgroup label="Both Rotations">
                                     {% for sessElec in fri_r3_electives %}
-                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_2 and previousForm.friday_rotation_2|int is eq sessElec.id }}>
+                                        <option class="r3_elective" value="{{ sessElec.id }}" {{ "selected" if previousForm.friday_rotation_2 and previousForm.friday_rotation_2|int is eq sessElec.id }} {{ "disabled" if currentEnrollment[sessElec.id]['remaining'] is eq 0 }}>
                                             {{ sessElec.elective.name }} ({{ currentEnrollment[sessElec.id]['remaining'] }} left)
                                         </option>
                                     {% endfor %}
@@ -375,7 +375,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="100%;" style="text-align:right; border:0px;">
+                        <td colspan="100%;" style="text-align:left; border:0px;">
                             <button class="submitButton" type="submit">Submit</button>
                         </td>
                     </tr>

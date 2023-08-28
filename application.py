@@ -94,7 +94,7 @@ def registrationPage(accessID=None):
             # Did a class fill up between the form being loaded and submitted?
             if currentEnrollment[esID]["remaining"] == 0:
                 fullElective = list(filter(lambda e: e.id == esID, electives))[0]
-                errors.append(f"The class '{fullElective.elective.name}' is now full. Please choose another.")
+                errors.append(f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective.")
 
         if PE_count < 3:
             errors.append(f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈.")
