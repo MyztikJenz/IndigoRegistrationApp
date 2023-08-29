@@ -169,7 +169,7 @@
                     }
                 });
                 if (sameDaysWarning.length > 0) {
-                    sameDaysWarning += "\nThis is not forbidden, but you might be a little bored doing the same elective twice in a row. You sure you're OK with this?"
+                    sameDaysWarning += "\nThis is not forbidden, but you might get a little bored doing the same elective twice in a row. Click 'cancel' to go back and make changes."
                     okWithDupes = window.confirm(sameDaysWarning)
                     if (!okWithDupes) {
                         return false

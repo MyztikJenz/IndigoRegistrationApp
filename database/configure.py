@@ -39,7 +39,7 @@ db_name     = os.environ["RDS_DB_NAME"]
 if "INDIGO_AWS" in os.environ:
     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///rsptest3.sqlite"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finaldeploytest1.sqlite"
 
 db = SQLAlchemy(app)
 

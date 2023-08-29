@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, flash, redirect, send_file
-from flask import render_template
+from flask import render_template, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, func
@@ -9,6 +9,10 @@ import logging
 import pprint
 import json
 import datetime
+import csv
+from itertools import zip_longest
+import io
+import zipfile
 
 from database.configure import *
 
@@ -216,8 +220,39 @@ def adminPage():
         #     date_format = '%Y-%m-%d %H:%M:%S'
         #     startDate = datetime.datetime.strptime(sessionStartDate, date_format)
 
+        if request.form["formID"] == "csv_schedules":
+            currentSession = RegistrationTools.activeSession()
+            zipBuffer = io.BytesIO()
+            zipOutput = zipfile.ZipFile(zipBuffer, "w")
 
+            for day in ["Monday", "Wednesday", "Thursday", "Friday"]:
+                for rotation in [[1,3], [2,3]]:
+                    electiveNames = []
+                    electiveAttendees = []
 
+                    subq = select(SessionElective).where(SessionElective.day == day).where(SessionElective.rotation.in_(rotation))\
+                                                .join(Elective).where(SessionElective.electiveID == Elective.id)\
+                                                .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
+                    sessionElectivesForDay = db.session.scalars(subq).fetchall()
+                    for se in sessionElectivesForDay:
+                        electiveNames.append(f"{se.elective.name}\r\n{se.elective.room}\r\n{se.elective.lead}")
+                        subq = select(Student.name).select_from(Schedule).where(Schedule.sessionElectiveID == se.id).join(Student).where(Schedule.studentID == Student.id).order_by(Student.name)
+                        students = db.session.scalars(subq).fetchall()
+                        electiveAttendees.append(students)
+
+                    f = io.StringIO()
+                    w = csv.writer(f, quoting=csv.QUOTE_ALL)
+                    w.writerow([day, f"Rotation {rotation[0]}", "1:05-1:50" if rotation[0] == 1 else "1:50-2:35"])
+                    w.writerow(electiveNames)
+                    zl = zip_longest(*electiveAttendees)
+                    for z in zl:
+                        w.writerow(z)
+
+                    zipOutput.writestr(f"{day}_{rotation[0]}.csv", f.getvalue())
+
+            zipOutput.close()
+            return Response(zipBuffer.getvalue(), mimetype="application/zip", headers={"Content-Disposition":f"attachment;filename=Session_{currentSession.number}_electives.zip"})
+        
         if request.form["formID"] == "session_upload":
             if 'sessions' not in request.files:
                 flash("No session found", 'error')
@@ -344,6 +379,39 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+
+#     electiveNames = []
+#     electiveAttendees = []
+
+#     currentSession = RegistrationTools.activeSession()
+#     subq = select(SessionElective).where(SessionElective.day == "Monday").where(SessionElective.rotation.in_([1,3]))\
+#                                 .join(Elective).where(SessionElective.electiveID == Elective.id)\
+#                                 .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
+#     print(subq)
+#     sessionElectivesForDay = db.session.scalars(subq).fetchall()
+#     for se in sessionElectivesForDay:
+#         electiveNames.append(f"{se.elective.name}\r\n{se.elective.room}\r\n{se.elective.lead}")
+#         print(se.elective.name, se.id)
+#         subq = select(Student.name).select_from(Schedule).where(Schedule.sessionElectiveID == se.id).join(Student).where(Schedule.studentID == Student.id).order_by(Student.name)
+#         students = db.session.scalars(subq).fetchall()
+#         electiveAttendees.append(students)
+
+#     csvPath = os.path.join(abspath("."), "instance", f"Monday.csv")
+#     with open(csvPath, 'w', newline='') as f:
+#         w = csv.writer(f, quoting=csv.QUOTE_ALL)
+#         w.writerow(["Monday", "Rotation 1", "1:05-1:50"])
+#         w.writerow(electiveNames)
+#         zl = zip_longest(*electiveAttendees)
+#         for z in zl:
+#             w.writerow(z)
+
+#     pdb.set_trace()
+
+
+
+
+
+
     # currentSession = RegistrationTools.activeSession()
     # col_name = "active"
     # x = getattr(Session, col_name)
@@ -377,9 +445,9 @@ def showSchedule(student, session=None, electives=None):
 #                                                         .where(SessionElective.rotation == 1)\
 #                                                         .join(Session).where(SessionElective.session == currentSession)
 #     print(subq)
-#     result = db.session.scalars(subq).fetchall()
-#     print(result)
-#     pdb.set_trace()
+    # result = db.session.scalars(subq).fetchall()
+    # print(result)
+    # pdb.set_trace()
 #     print(result[0].elective.name)
 
 #     currentSession = RegistrationTools.activeSession()
