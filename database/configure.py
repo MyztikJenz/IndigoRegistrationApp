@@ -24,6 +24,10 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
+# Setting this to true will reconfigure how accessIDs are generated so that what is put into the database isn't what we'll actually use.
+# You will need to re-upload the roster to see this value changed in the database.
+runningSystemAsTest = False
+
 # Template folder location is relative to the file that creates the app (which is this file)
 application = app = Flask(__name__, template_folder="../templates")
 app.config["SECRET_KEY"] = "***REMOVED***"
@@ -277,8 +281,10 @@ class ConfigUtils():
 #            app.logger.info(row["name"])
             key = row["name"] + "|" + row["class"] + "|" + row["grade"]
             md5hash = hashlib.md5(key.encode()).hexdigest()
-#            accessID = md5hash[:7]
-            accessID = md5hash[-7:]
+            if runningSystemAsTest:
+                accessID = md5hash[-7:]
+            else:
+                accessID = md5hash[:7]
             db.session.add(Student(name=row["name"], grade=row["grade"][:1], teacher=row["class"], accessID=accessID))
 
         db.session.commit()
