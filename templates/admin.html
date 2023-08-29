@@ -1,6 +1,30 @@
 <!DOCTYPE html>
 <head>
+    <style>
+        body {
+            font: normal normal 14px/1.2 'Helvetica Neue', Arial, sans-serif;
+        }
 
+        .container {
+            display:flex;
+        }
+
+        .left_side {
+            width: 50%; 
+            padding: 2px;
+        }
+
+        .right_side {
+            flex-grow: 1;
+            padding: 2px;
+        }
+
+        hr {
+            margin-left:0px;
+            margin-top: 28px;
+            max-width:350px;
+        }
+    </style>
 </head>
 <body>
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -12,118 +36,123 @@
         </ul>
     {% endif %}
 {% endwith %}
-<form method=post enctype=multipart/form-data action="/_admin_">
-<input type="hidden" name="formID" value="startSession">
-<table>
-    <thead>
-        <td colspan="2"><strong>Please be careful here...</strong> updating this changes the active session!</td>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Current Session #</td>
-            <td>
-                <select id="sessionNumber" name="sessionNumber">
+<div class="container">
+    <div class="left_side">
+        <form method=post enctype=multipart/form-data action="/_admin_">
+        <input type="hidden" name="formID" value="startSession">
+        <table>
+            <thead>
+                <td colspan="2"><strong>Please be careful here...</strong> updating this changes the active session!</td>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Current Session #</td>
+                    <td>
+                        <select id="sessionNumber" name="sessionNumber">
+                            <option name="1">1</option>
+                            <option name="2">2</option>
+                            <option name="3">3</option>
+                            <option name="4">4</option>
+                        </select>
+                    </td>    
+                </tr>
+                <tr>
+                    <td style="vertical-align: top;"><label for="sessionStartDate">Registration start date</label>
+                        <p>
+                            Order goes:<br>
+                            1: Paolini-Ruiz-Bishop<br>
+                            2: Ruiz-Bishop-Paolini<br>
+                            3: Bishop-Paolini-Ruiz<br>
+                            4: Paolini-Ruiz-Bishop<br>
+                        </p>
+                    </td>
+                    <td>
+                        <input type="text" name="sessionStartDate" id="sessionStartDate" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}">
+                    </td>    
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>
+                        <button class="submitButton" type="submit">Submit</button>
+                    </td>    
+                </tr>
+            </tbody>
+        </table>
+        </form>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            Generally speaking, go in the order presented here otherwise you'll probably encounter errors (some tables need data from the ones before it)
+        </p>
+        <p>
+            <strong>Session Upload:</strong><p>
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type="hidden" name="formID" value="session_upload">
+                <input type=file name="sessions">
+                <input type=submit value=Upload>
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            <strong>Roster Upload:</strong> Student count in database: {{ studentCount }}<p>
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type="hidden" name="formID" value="roster_upload">
+                <input type=file name="roster">
+                <input type=submit value=Upload>
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            <strong>Elective Upload:</strong><p>
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type="hidden" name="formID" value="elective_upload">
+                Session #: <select name="sessionNumber">
                     <option name="1">1</option>
                     <option name="2">2</option>
                     <option name="3">3</option>
                     <option name="4">4</option>
                 </select>
-            </td>    
-        </tr>
-        <tr>
-            <td style="vertical-align: top;"><label for="sessionStartDate">Registration start date</label>
-                <p>
-                    Order goes:<br>
-                    1: Paolini-Ruiz-Bishop<br>
-                    2: Ruiz-Bishop-Paolini<br>
-                    3: Bishop-Paolini-Ruiz<br>
-                    4: Paolini-Ruiz-Bishop<br>
-                </p>
-            </td>
-            <td>
-                <input type="text" name="sessionStartDate" id="sessionStartDate" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}">
-            </td>    
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td>
-                <button class="submitButton" type="submit">Submit</button>
-            </td>    
-        </tr>
-    </tbody>
-</table>
-</form>
-<hr style="max-width:350px;margin-left:0px;">
-<p>
-    Generally speaking, go in the order presented here otherwise you'll probably encounter errors (some tables need data from the ones before it)
-</p>
-<p>
-    <strong>Session Upload:</strong><p>
-    <form method=post enctype=multipart/form-data action="/_admin_">
-        <input type="hidden" name="formID" value="session_upload">
-        <input type=file name="sessions">
-        <input type=submit value=Upload>
-    </form>
-</p>
-<hr style="max-width:350px;margin-left:0px;">
-<p>
-    <strong>Roster Upload:</strong> Student count in database: {{ studentCount }}<p>
-    <form method=post enctype=multipart/form-data action="/_admin_">
-        <input type="hidden" name="formID" value="roster_upload">
-        <input type=file name="roster">
-        <input type=submit value=Upload>
-    </form>
-</p>
-<hr style="max-width:350px;margin-left:0px;">
-<p>
-    <strong>Elective Upload:</strong><p>
-    <form method=post enctype=multipart/form-data action="/_admin_">
-        <input type="hidden" name="formID" value="elective_upload">
-        Session #: <select name="sessionNumber">
-            <option name="1">1</option>
-            <option name="2">2</option>
-            <option name="3">3</option>
-            <option name="4">4</option>
-        </select>
-        <br>
-        <input type=file name="electives">
-        <input type=submit value=Upload>
-    </form>
-</p>
-<hr style="max-width:350px;margin-left:0px;">
-<p>
-    <strong>Specific Assignment Upload:</strong><p>
-        When you need to assign students to specific classes. The file you upload here must have student names that match exactly to the roster.
-    <form method=post enctype=multipart/form-data action="/_admin_">
-        <input type="hidden" name="formID" value="specific_assignment">
-        Session #: <select name="sessionNumber">
-            <option name="1">1</option>
-            <option name="2">2</option>
-            <option name="3">3</option>
-            <option name="4">4</option>
-        </select>
-        <br>
-        <input type=file name="assignments">
-        <input type=submit value=Upload>
-    </form>
-</p>
-<hr style="max-width:350px;margin-left:0px;">
-<p>
-    <strong>CSV Schedules Download:</strong><p>
-        Download CSVs of the schedule for the current session.
-    <form method=post enctype=multipart/form-data action="/_admin_">
-        <input type = "hidden" name="formID" value="csv_schedules">
-        <input type = "submit" value="Download Schedules">
-    </form>
-</p>
-<hr style="max-width:350px;margin-left:0px;">
-<p>
-    <strong>Enrollment Overview Download:</strong><p>
-        Download a view of enrollment over the entire student body.
-    <form method=post enctype=multipart/form-data action="/_admin_">
-        <input type = "hidden" name="formID" value="enrollment_overview">
-        <input type = "submit" value="Download Overview">
-    </form>
-</p>
+                <br>
+                <input type=file name="electives">
+                <input type=submit value=Upload>
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            <strong>Specific Assignment Upload:</strong><p>
+                When you need to assign students to specific classes. The file you upload here must have student names that match exactly to the roster.
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type="hidden" name="formID" value="specific_assignment">
+                Session #: <select name="sessionNumber">
+                    <option name="1">1</option>
+                    <option name="2">2</option>
+                    <option name="3">3</option>
+                    <option name="4">4</option>
+                </select>
+                <br>
+                <input type=file name="assignments">
+                <input type=submit value=Upload>
+            </form>
+        </p>
+    </div>
+    <div class = "right_side">
+        <p>
+            <strong>CSV Schedules Download:</strong><p>
+                Download CSVs of the schedule for the current session.
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type = "hidden" name="formID" value="csv_schedules">
+                <input type = "submit" value="Download Schedules">
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            <strong>Enrollment Overview Download:</strong><p>
+                Download a view of enrollment over the entire student body.
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type = "hidden" name="formID" value="enrollment_overview">
+                <input type = "submit" value="Download Overview">
+            </form>
+        </p>
+    </div>
+</div>
 </body>
 </html>
