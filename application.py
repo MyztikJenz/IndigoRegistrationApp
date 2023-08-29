@@ -20,8 +20,9 @@ from database.configure import *
 ### What's left
 # x Elective Descriptions
 # x Admin functionality to get things started
-# Output of schedules
-# Knowing which kids have yet to fill something out.
+# x Output of schedules
+# x Knowing which kids have yet to fill something out.
+# Cleaning up electives list
 # testing
 
 # Notes
@@ -220,6 +221,51 @@ def adminPage():
         #     date_format = '%Y-%m-%d %H:%M:%S'
         #     startDate = datetime.datetime.strptime(sessionStartDate, date_format)
 
+        if request.form["formID"] == "enrollment_overview":
+            currentSession = RegistrationTools.activeSession()
+
+            # I feel this is something that the database should be able to do with enough subqueries but I couldn't quite get it figured out.
+            # Maybe Future Jim™ will be smart enough to figure it out.
+            studentNames = []
+            allElectives = []
+            subq = select(Student).order_by(Student.name)
+            students = db.session.scalars(subq).fetchall()
+            for day in ["Monday", "Wednesday", "Thursday", "Friday"]:
+                r1 = []
+                r2 = []
+                for s in students:
+                    if day == "Monday":
+                        studentNames.append(s.name)
+
+                    day_q = select(SessionElective).join(Elective).where(SessionElective.electiveID == Elective.id).where(SessionElective.day == day)\
+                                            .join(Schedule).where(Schedule.sessionElectiveID == SessionElective.id).where(Schedule.studentID == s.id)\
+                                            .join(Session).where(SessionElective.session == currentSession)
+
+                    sessionElectives = db.session.scalars(day_q).fetchall()
+                    r1_entry = ""
+                    r2_entry = ""
+                    for se in sessionElectives:
+                        if se.rotation in [1,3]:
+                            r1_entry = se.elective.name
+                        if se.rotation in [2,3]:
+                            r2_entry = se.elective.name
+                    r1.append(r1_entry)
+                    r2.append(r2_entry)
+
+                allElectives.append(r1)
+                allElectives.append(r2)
+            
+            allElectives.insert(0, studentNames)
+            fileBuffer = io.StringIO()
+            w = csv.writer(fileBuffer, quoting=csv.QUOTE_ALL)
+            w.writerow(["", "Monday", "", "Wednesday", "", "Thursday", "", "Friday", ""])
+            w.writerow(["","R1", "R2","R1", "R2","R1", "R2","R1", "R2"])
+            zl = zip_longest(*allElectives)
+            for z in zl:
+                w.writerow(z)
+            
+            return Response(fileBuffer.getvalue(), mimetype="text/csv", headers={"Content-Disposition":f"attachment;filename=Session #{currentSession.number} enrollment overview.csv"})
+
         if request.form["formID"] == "csv_schedules":
             currentSession = RegistrationTools.activeSession()
             zipBuffer = io.BytesIO()
@@ -251,7 +297,7 @@ def adminPage():
                     zipOutput.writestr(f"{day}_{rotation[0]}.csv", f.getvalue())
 
             zipOutput.close()
-            return Response(zipBuffer.getvalue(), mimetype="application/zip", headers={"Content-Disposition":f"attachment;filename=Session_{currentSession.number}_electives.zip"})
+            return Response(zipBuffer.getvalue(), mimetype="application/zip", headers={"Content-Disposition":f"attachment;filename=Session #{currentSession.number} electives.zip"})
         
         if request.form["formID"] == "session_upload":
             if 'sessions' not in request.files:
@@ -379,11 +425,12 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+#     currentSession = RegistrationTools.activeSession()
 
 #     electiveNames = []
 #     electiveAttendees = []
 
-#     currentSession = RegistrationTools.activeSession()
+    # currentSession = RegistrationTools.activeSession()
 #     subq = select(SessionElective).where(SessionElective.day == "Monday").where(SessionElective.rotation.in_([1,3]))\
 #                                 .join(Elective).where(SessionElective.electiveID == Elective.id)\
 #                                 .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
@@ -396,14 +443,14 @@ def showSchedule(student, session=None, electives=None):
 #         students = db.session.scalars(subq).fetchall()
 #         electiveAttendees.append(students)
 
-#     csvPath = os.path.join(abspath("."), "instance", f"Monday.csv")
-#     with open(csvPath, 'w', newline='') as f:
-#         w = csv.writer(f, quoting=csv.QUOTE_ALL)
-#         w.writerow(["Monday", "Rotation 1", "1:05-1:50"])
-#         w.writerow(electiveNames)
-#         zl = zip_longest(*electiveAttendees)
-#         for z in zl:
-#             w.writerow(z)
+    # csvPath = os.path.join(abspath("."), "instance", f"Monday.csv")
+    # with open(csvPath, 'w', newline='') as f:
+    #     w = csv.writer(f, quoting=csv.QUOTE_ALL)
+    #     w.writerow(["Monday", "Rotation 1", "1:05-1:50"])
+    #     w.writerow(electiveNames)
+    #     zl = zip_longest(*electiveAttendees)
+    #     for z in zl:
+    #         w.writerow(z)
 
 #     pdb.set_trace()
 
