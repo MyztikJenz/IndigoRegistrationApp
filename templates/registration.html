@@ -387,9 +387,10 @@
     <div class="electiveDescriptions">
         <hr style="max-width:350px;margin-left:0px;">
         <h4>Elective Descriptions</h4>
-        <div>
+        Find out more about a particular elective.
+        <div style="margin-top: 8px;">
             <select id="classDesc2">
-                <option value="_instruction">Choose something</option>
+                <option value="_instruction">Choose wisely...</option>
                 {% for dict in electiveDescriptions %}
                     <option value="{{ dict.k }}">{{ dict.v }}</option>
                 {% endfor %}

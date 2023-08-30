@@ -27,6 +27,8 @@ from database.configure import *
 
 # Notes
 # In session 2, we can use the AssignedClasses infrastructure to pull "part 2" electives out and auto-assign them.
+# We need a better way to instantiate the database. It's only created at app launch time, which means racing deployment
+#   or restarting the server if we fail. 
 
 @app.route("/")
 def hello_world():
