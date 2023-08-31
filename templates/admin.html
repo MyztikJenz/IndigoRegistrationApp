@@ -139,7 +139,7 @@
     <div class = "right_side">
         <p>
             <strong>CSV Schedules Download:</strong><p>
-                Download CSVs of the schedule for the current session.
+                CSVs of the enrolled student schedules for the current session.
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type = "hidden" name="formID" value="csv_schedules">
                 <input type = "submit" value="Download Schedules">
@@ -152,6 +152,15 @@
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type = "hidden" name="formID" value="enrollment_overview">
                 <input type = "submit" value="Download Overview">
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            <strong>Schedule of Electives Download:</strong><p>
+                A schedule of what electives are happening when for the current session.
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type = "hidden" name="formID" value="elective_schedules">
+                <input type = "submit" value="Download Schedule">
             </form>
         </p>
     </div>

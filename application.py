@@ -24,6 +24,8 @@ from database.configure import *
 # x Knowing which kids have yet to fill something out.
 # Cleaning up electives list
 # testing
+# Need a /x/demo account
+# x Need a schedule of which electives are held when (for pre-planning; just like college)
 
 # Notes
 # In session 2, we can use the AssignedClasses infrastructure to pull "part 2" electives out and auto-assign them.
@@ -222,6 +224,43 @@ def adminPage():
 
         #     date_format = '%Y-%m-%d %H:%M:%S'
         #     startDate = datetime.datetime.strptime(sessionStartDate, date_format)
+
+        if request.form["formID"] == "elective_schedules":
+            currentSession = RegistrationTools.activeSession()
+
+            allR1 = [["Rotation 1"]]
+            allR2 = [["Rotation 2"]]
+
+            for day in ["Monday", "Wednesday", "Thursday", "Friday"]:
+                r1 = []
+                r2 = []
+                subq = select(SessionElective).join(Elective).where(SessionElective.electiveID == Elective.id)\
+                                                                                            .where(Elective.assignOnly == False)\
+                                                                                            .where(SessionElective.day == day)\
+                                                                                .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
+                sessionElectives = db.session.scalars(subq).fetchall()
+                for se in sessionElectives:
+                    if se.rotation in [1,3]:
+                        r1.append(se.elective.name)
+                    if se.rotation in [2,3]:
+                        r2.append(se.elective.name)
+
+                allR1.append(r1)
+                allR2.append(r2)
+
+            fileBuffer = io.StringIO()
+            w = csv.writer(fileBuffer, quoting=csv.QUOTE_ALL)
+            w.writerow(["", "Monday", "Wednesday", "Thursday", "Friday"])
+            zl = zip_longest(*allR1)
+            for z in zl:
+                w.writerow(z)
+            w.writerow(["","","","",""])
+            zl = zip_longest(*allR2)
+            for z in zl:
+                w.writerow(z)
+
+            return Response(fileBuffer.getvalue(), mimetype="text/csv", headers={"Content-Disposition":f"attachment;filename=Session #{currentSession.number} Schedule of Electives.csv"})
+
 
         if request.form["formID"] == "enrollment_overview":
             currentSession = RegistrationTools.activeSession()
@@ -429,6 +468,43 @@ def showSchedule(student, session=None, electives=None):
 # with app.app_context():
 #     currentSession = RegistrationTools.activeSession()
 
+#     allR1 = [["Rotation 1"]]
+#     allR2 = [["Rotation 2"]]
+
+#     for day in ["Monday", "Wednesday", "Thursday", "Friday"]:
+#         r1 = []
+#         r2 = []
+#         subq = select(SessionElective).join(Elective).where(SessionElective.electiveID == Elective.id)\
+#                                                                                        .where(Elective.assignOnly == False)\
+#                                                                                        .where(SessionElective.day == day)\
+#                                                                         .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
+#         print(subq)
+#         sessionElectives = db.session.scalars(subq).fetchall()
+#         print(sessionElectives)
+#         for se in sessionElectives:
+#             if se.rotation in [1,3]:
+#                 r1.append(se.elective.name)
+#             if se.rotation in [2,3]:
+#                 r2.append(se.elective.name)
+
+#         allR1.append(r1)
+#         allR2.append(r2)
+
+#     csvPath = os.path.join("./instance", f"ElectiveSchedule.csv")
+#     with open(csvPath, 'w', newline='') as f:
+#         w = csv.writer(f, quoting=csv.QUOTE_ALL)
+#         w.writerow(["", "Monday", "Wednesday", "Thursday", "Friday"])
+#         zl = zip_longest(*allR1)
+#         for z in zl:
+#             w.writerow(z)
+
+#         w.writerow(["","","","",""])
+#         zl = zip_longest(*allR2)
+#         for z in zl:
+#             w.writerow(z)
+
+#     pdb.set_trace()
+
 #     electiveNames = []
 #     electiveAttendees = []
 
@@ -447,8 +523,8 @@ def showSchedule(student, session=None, electives=None):
 
     # csvPath = os.path.join(abspath("."), "instance", f"Monday.csv")
     # with open(csvPath, 'w', newline='') as f:
-    #     w = csv.writer(f, quoting=csv.QUOTE_ALL)
-    #     w.writerow(["Monday", "Rotation 1", "1:05-1:50"])
+        # w = csv.writer(f, quoting=csv.QUOTE_ALL)
+        # w.writerow(["Monday", "Rotation 1", "1:05-1:50"])
     #     w.writerow(electiveNames)
     #     zl = zip_longest(*electiveAttendees)
     #     for z in zl:
