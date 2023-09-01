@@ -47,6 +47,7 @@ def registrationPage(accessID=None):
     r = db.session.execute(sel)
     student = r.scalar_one_or_none()
     if not student:
+        app.logger.error(f"no matching student found for accessID {accessID}")
         return "<p>invalid access ID</p>", 401
     
     # Need...
@@ -61,12 +62,12 @@ def registrationPage(accessID=None):
         return render_template("notyet.html", teacher=student.teacher)
 
     # A list of electives for the current session
-    sel = select(SessionElective).where(SessionElective.session == currentSession)
-    r = db.session.scalars(sel)
-    electives = r.fetchall()
+    subq = select(SessionElective).where(SessionElective.session == currentSession)
+    electives = db.session.scalars(subq).fetchall()
 
     isEnrolledForSession = RegistrationTools.studentEnrolledForSession(student, currentSession)
     if isEnrolledForSession:
+        app.logger.info(f"[{accessID}] already registered, showing schedule")
         return showSchedule(student, currentSession)
 
     # the count of seats already occupied
@@ -82,9 +83,14 @@ def registrationPage(accessID=None):
 
         # Did rotation=3 electives stay together (rotation1 and rotation2 need to match)
         R3_electives = list(filter(lambda e: e.rotation == 3, electives))
-        RE_electiveIDs = list(map(lambda e: e.id, R3_electives))
+        R3_electiveIDs = list(map(lambda e: e.id, R3_electives))
 
         studentElectivesIDs = []
+        app.logger.debug(f"[{accessID}] request.form: {request.form}")
+
+        # If the form errors on a class being full and the student doesn't change it, it will be resubmitted as empty and not be part
+        # of the request.form contents. We are always expecting 8, so anything less is a problem.
+
         for key in request.form:
             esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
             studentElectivesIDs.append(esID)
@@ -92,21 +98,33 @@ def registrationPage(accessID=None):
             if esID in PE_electiveIDs:
                 PE_count += 1
 
-            if esID in RE_electiveIDs:
+            if esID in R3_electiveIDs:
                 partnerKey = key.replace("1","2") # Assume our id ends in 1
                 if key[-1] == "2":
                     partnerKey = key.replace("2", "1")
                 if request.form[key] != request.form[partnerKey]:
                     brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
-                    errors.append(f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective.")
+                    msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                    errors.append(msg)
+                    app.logger.error(f"[{accessID}] {msg}")
 
             # Did a class fill up between the form being loaded and submitted?
             if currentEnrollment[esID]["remaining"] == 0:
                 fullElective = list(filter(lambda e: e.id == esID, electives))[0]
-                errors.append(f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective.")
+                msg = f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective."
+                errors.append(msg)
+                app.logger.error(f"[{accessID}] {msg}")
 
         if PE_count < 3:
-            errors.append(f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈.")
+            msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
+            errors.append(msg)
+            app.logger.error(f"[{accessID}] {msg}")
+
+        if len(studentElectivesIDs) != 8:
+            msg = f"Critical application error! Unexpected count of elective IDs {studentElectivesIDs}. (this is not an error you can fix)"
+            errors.append(msg)
+            app.logger.error(f"[{accessID}] {msg}")
+            app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
 
 #        errors.append("This is a test error")
         if len(errors) > 0:
@@ -114,15 +132,24 @@ def registrationPage(accessID=None):
         else:
             # There are no errors! We can submit their schedule and show them the good news.
             studentElectives = list(filter(lambda e: e.id in studentElectivesIDs, electives))
-            (code, result) = RegistrationTools.registerStudent(student, studentElectives)
-
-            if (code == "ok"):
-                return showSchedule(student, currentSession, studentElectives)
+            if len(studentElectives) != 8:
+                msg = f"Critical application error! Unexpected count of student electives {studentElectives}. (this is not an error you can fix)"
+                errors.append(msg)
+                app.logger.error(f"[{accessID}] {msg}")
+                app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
+                foundNames = list(map(lambda se: f"se.id: {se.id} name: {se.elective.name}", studentElectives))
+                app.logger.error(f"[{accessID}] studentElectives found: {foundNames}")
+                previousForm = request.form
             else:
-                # Something has gone pretty wrong at this point. Database has failed to accept the addition.
-                err = f"Failed to save results: {result}"
-                app.logger.error(err)
-                return err
+                (code, result) = RegistrationTools.registerStudent(student, studentElectives)
+
+                if (code == "ok"):
+                    return showSchedule(student, currentSession, studentElectives)
+                else:
+                    # Something has gone pretty wrong at this point. Database has failed to accept the addition.
+                    err = f"[{accessID}] Failed to save results: {result}"
+                    app.logger.error(err)
+                    return err
 
     # END if request.method == "POST":
 
@@ -228,6 +255,8 @@ def adminPage():
         if request.form["formID"] == "elective_schedules":
             currentSession = RegistrationTools.activeSession()
 
+            includeSeatCount = True if request.form["includeSeatsRemaining"] == "on" else False
+
             allR1 = [["Rotation 1"]]
             allR2 = [["Rotation 2"]]
 
@@ -239,11 +268,19 @@ def adminPage():
                                                                                             .where(SessionElective.day == day)\
                                                                                 .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
                 sessionElectives = db.session.scalars(subq).fetchall()
-                for se in sessionElectives:
-                    if se.rotation in [1,3]:
-                        r1.append(se.elective.name)
-                    if se.rotation in [2,3]:
-                        r2.append(se.elective.name)
+                if includeSeatCount:
+                    seatsLeft = RegistrationTools.currentEnrollmentCounts(sessionElectives)
+                    for se in sessionElectives:
+                        if se.rotation in [1,3]:
+                            r1.append(f"{se.elective.name} ({seatsLeft[se.id]['remaining']})")
+                        if se.rotation in [2,3]:
+                            r2.append(f"{se.elective.name} ({seatsLeft[se.id]['remaining']})")
+                else:
+                    for se in sessionElectives:
+                        if se.rotation in [1,3]:
+                            r1.append(se.elective.name)
+                        if se.rotation in [2,3]:
+                            r2.append(se.elective.name)
 
                 allR1.append(r1)
                 allR2.append(r2)
