@@ -22,10 +22,13 @@ from database.configure import *
 # x Admin functionality to get things started
 # x Output of schedules
 # x Knowing which kids have yet to fill something out.
-# Cleaning up electives list
+# x Cleaning up electives list
 # testing
 # Need a /x/demo account
 # x Need a schedule of which electives are held when (for pre-planning; just like college)
+# Fix the 0 seats bug
+# Modify student option in admin page
+# "priority boarding" list
 
 # Notes
 # In session 2, we can use the AssignedClasses infrastructure to pull "part 2" electives out and auto-assign them.
@@ -90,41 +93,59 @@ def registrationPage(accessID=None):
 
         # If the form errors on a class being full and the student doesn't change it, it will be resubmitted as empty and not be part
         # of the request.form contents. We are always expecting 8, so anything less is a problem.
+        if len(request.form.keys) < 8:
+            # Find which ones are missing
+            missing = []
+            for day in ["monday", "wednesday", "thursday", "friday"]:
+                for rotation in [1, 2]:
+                    key = f"{day}_rotation_{rotation}"
+                    if key not in request.form.keys:
+                        missing.append(key)
+            desc = ""
+            for miss in missing:
+                (day,rotation) = miss.split("_rotation_")
+                if len(desc):
+                    desc += ", "
+                desc += f"{day.title()} R{rotation}"
 
-        for key in request.form:
-            esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
-            studentElectivesIDs.append(esID)
+            msg = f"You attempted to reselect a full elective on {desc}. This isn't valid and those entries have been reset. Please choose again."
+            errors.append(msg)
+            app.logger.error(f"[{accessID}] {msg}")
+        else:
+            for key in request.form:
+                esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
+                studentElectivesIDs.append(esID)
 
-            if esID in PE_electiveIDs:
-                PE_count += 1
+                if esID in PE_electiveIDs:
+                    PE_count += 1
 
-            if esID in R3_electiveIDs:
-                partnerKey = key.replace("1","2") # Assume our id ends in 1
-                if key[-1] == "2":
-                    partnerKey = key.replace("2", "1")
-                if request.form[key] != request.form[partnerKey]:
-                    brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
-                    msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                if esID in R3_electiveIDs:
+                    partnerKey = key.replace("1","2") # Assume our id ends in 1
+                    if key[-1] == "2":
+                        partnerKey = key.replace("2", "1")
+                    if request.form[key] != request.form[partnerKey]:
+                        brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
+                        msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                        errors.append(msg)
+                        app.logger.error(f"[{accessID}] {msg}")
+
+                # Did a class fill up between the form being loaded and submitted?
+                if currentEnrollment[esID]["remaining"] == 0:
+                    fullElective = list(filter(lambda e: e.id == esID, electives))[0]
+                    msg = f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective."
                     errors.append(msg)
                     app.logger.error(f"[{accessID}] {msg}")
 
-            # Did a class fill up between the form being loaded and submitted?
-            if currentEnrollment[esID]["remaining"] == 0:
-                fullElective = list(filter(lambda e: e.id == esID, electives))[0]
-                msg = f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective."
+            if PE_count < 3:
+                msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
                 errors.append(msg)
                 app.logger.error(f"[{accessID}] {msg}")
 
-        if PE_count < 3:
-            msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
-            errors.append(msg)
-            app.logger.error(f"[{accessID}] {msg}")
-
-        if len(studentElectivesIDs) != 8:
-            msg = f"Critical application error! Unexpected count of elective IDs {studentElectivesIDs}. (this is not an error you can fix)"
-            errors.append(msg)
-            app.logger.error(f"[{accessID}] {msg}")
-            app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
+            if len(studentElectivesIDs) != 8:
+                msg = f"Critical application error! Unexpected count of elective IDs {studentElectivesIDs}. (this is not an error you can fix)"
+                errors.append(msg)
+                app.logger.error(f"[{accessID}] {msg}")
+                app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
 
 #        errors.append("This is a test error")
         if len(errors) > 0:
@@ -272,9 +293,9 @@ def adminPage():
                     seatsLeft = RegistrationTools.currentEnrollmentCounts(sessionElectives)
                     for se in sessionElectives:
                         if se.rotation in [1,3]:
-                            r1.append(f"{se.elective.name} ({seatsLeft[se.id]['remaining']})")
+                            r1.append(f"{se.elective.name} ({seatsLeft[se.id]['remaining']} left)")
                         if se.rotation in [2,3]:
-                            r2.append(f"{se.elective.name} ({seatsLeft[se.id]['remaining']})")
+                            r2.append(f"{se.elective.name} ({seatsLeft[se.id]['remaining']} left)")
                 else:
                     for se in sessionElectives:
                         if se.rotation in [1,3]:
