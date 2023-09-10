@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-    <style>
+    <style type="text/css">
         body {
             font: normal normal 14px/1.2 'Helvetica Neue', Arial, sans-serif;
         }
@@ -17,6 +17,7 @@
         .right_side {
             flex-grow: 1;
             padding: 2px;
+            max-width: 500px;
         }
 
         hr {
@@ -24,7 +25,85 @@
             margin-top: 28px;
             max-width:350px;
         }
+
+        optgroup {
+            color: red;
+            background-color: black;
+        }
+
+        option {
+           color: black;
+        }
+
+        .modify_td_key {
+            text-align: right;
+            font-weight: bold;
+        }
     </style>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script id="rendered-js">
+        $(function() {
+            $('#modify_elective_assignment_sessionNumber').change(function() {
+                $('#removeFromElective option').remove();
+                $('#removeFromElective optgroup').remove();
+                $('#addToElective option').remove();
+                $('#addToElective optgroup').remove();
+                $('#modify_assignment_student option:first').prop('selected', true)
+            });
+        });
+
+        $(function() {
+            $('#modify_assignment_student').change(function() {
+                studentID = $("option:selected", $(this)).attr('value')
+                targetSession = $("option:selected", $('#modify_elective_assignment_sessionNumber')).attr('value')
+
+                if (studentID == "no_name") {
+                    return
+                }
+
+                $.getJSON("/_json_/student_assignments", {"sID": studentID, "session": targetSession}, function(data) {
+                    if (data['error']) {
+                        alert("Error: " + data['error'])
+                    }
+                    else {
+                        enrolled = data["enrolled"]
+                        available = data["available"]
+
+                        $('#removeFromElective option').remove();
+                        $('#removeFromElective optgroup').remove();
+
+                        $('#removeFromElective').get(0).options.add(new Option(text="No change", value="no_change"))
+                        optGroup = null;
+                        $.each(enrolled, function(idx) {
+                            se = enrolled[idx]
+                            if (optGroup == null || optGroup.label != se["day"]) {
+                                optGroup = document.createElement('optgroup')
+                                optGroup.label = se["day"]
+                                $('#removeFromElective').get(0).options.add(optGroup)
+                            }
+                            $('#removeFromElective').get(0).options.add(new Option(text=se["name"] + " ("+ se["seats_left"] +" left)", value=se["id"]))
+                        });
+
+                        $('#addToElective option').remove();
+                        $('#addToElective optgroup').remove();
+
+                        $('#addToElective').get(0).options.add(new Option(text="No change", value="no_change"))
+                        optGroup = null;
+                        $.each(available, function(idx) {
+                            se = available[idx]
+                            if (optGroup == null || optGroup.label != se["day"] + ' R' + se["rotation"]) {
+                                optGroup = document.createElement('optgroup')
+                                optGroup.label = se["day"] + ' R' + se["rotation"]
+                                $('#addToElective').get(0).options.add(optGroup)
+                            }
+                            $('#addToElective').get(0).options.add(new Option(text=se["name"] + " ("+ se["seats_left"] +" left)", value=se["id"]))
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 </head>
 <body>
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -162,6 +241,61 @@
                 <input type = "hidden" name="formID" value="elective_schedules">
                 <input type = "checkbox" name="includeSeatsRemaining"> include seats remaining<br>
                 <input type = "submit" value="Download Schedule">
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            <strong>Modify Assignments:</strong><p>
+                Allows you to move students around as needed. Does not take into account occupancy, so you can overload a class if you'd like.
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type = "hidden" name="formID" value="modify_elective_assignment">
+                <table id="modify_elective_assignment_table">
+                    <tr>
+                        <td class="modify_td_key">Session:</td>
+                        <td>
+                            <select name="modify_elective_assignment_sessionNumber" id="modify_elective_assignment_sessionNumber">
+                                <option value="current" selected>current</option>
+                                <option value="1">#1</option>
+                                <option value="2">#2</option>
+                                <option value="3">#3</option>
+                                <option value="4">#4</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="modify_td_key">Student:</td>
+                        <td>
+                            <select name="modify_assignment_student" id="modify_assignment_student">
+                                <option value="no_name" selected disabled>Pick a student</option>
+                                {% for student in students %}
+                                    <option value="{{ student.id }}">{{ student.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="modify_td_key">Add to:</td>
+                        <td>
+                            <select name="addToElective" id="addToElective">
+
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="modify_td_key">Remove from:</td>
+                        <td>
+                            <select name="removeFromElective" id="removeFromElective">
+
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>
+                            <input type = "submit" value="Modify Schedule">
+                        </td>
+                    </tr>
+                </table>
             </form>
         </p>
     </div>

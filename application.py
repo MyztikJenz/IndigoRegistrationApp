@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, flash, redirect, send_file
-from flask import render_template, Response
+from flask import render_template, Response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, func
@@ -27,7 +27,7 @@ from database.configure import *
 # Need a /x/demo account
 # x Need a schedule of which electives are held when (for pre-planning; just like college)
 # Fix the 0 seats bug
-# Modify student option in admin page
+# x Modify student option in admin page
 # "priority boarding" list
 
 # Notes
@@ -273,6 +273,30 @@ def adminPage():
         #     date_format = '%Y-%m-%d %H:%M:%S'
         #     startDate = datetime.datetime.strptime(sessionStartDate, date_format)
 
+        if request.form["formID"] == "modify_elective_assignment":
+            studentID = int(request.form["modify_assignment_student"])
+            student = db.session.execute(select(Student).where(Student.id == studentID)).scalar_one_or_none()
+            if not student:
+                flash("Could not find student record", 'error')
+                return redirect(request.url)
+
+            if request.form["addToElective"] != "no_change":
+                se = db.session.execute(select(SessionElective).where(SessionElective.id == int(request.form["addToElective"]))).scalar_one_or_none()
+                if not se:
+                    flash("Failed to find session elective record for 'add to'", "error")
+                    return redirect(request.url)
+
+                s = Schedule(sessionElective=se)
+                student.schedule.extend([s])
+
+            if request.form["removeFromElective"] != "no_change":
+                stmt = delete(Schedule).where(Schedule.studentID == student.id).where(Schedule.sessionElectiveID == int(request.form["removeFromElective"]))
+                db.session.execute(stmt)
+
+            db.session.commit()
+            flash(f"Updated classes for {student.name}", "ok")
+            return redirect(request.url)
+
         if request.form["formID"] == "elective_schedules":
             currentSession = RegistrationTools.activeSession()
 
@@ -468,7 +492,8 @@ def adminPage():
             return redirect(request.url)
     else:
         studentCount = db.session.query(func.count(Student.id)).scalar()
-        return render_template('admin.html', studentCount=studentCount)
+        students = db.session.scalars(select(Student).order_by(Student.name)).fetchall()
+        return render_template('admin.html', studentCount=studentCount, students=students)
 
 @app.route("/class/<classFile>", methods=['GET'])
 def returnClassFile(classFile=None):
@@ -482,6 +507,54 @@ def returnClassFile(classFile=None):
 #    if classFile == "readall":
 
     return send_file("../electives/"+classFile)
+
+# Only returns JSON
+@app.route("/_json_/<task>")
+def generateJSON(task=None):
+    if not task:
+        return jsonify()
+    
+    # Comes from the admin "modify assignments" page
+    if task == "student_assignments":
+        studentID = request.args.get("sID")
+        targetSession = request.args.get("session")
+        session = None
+        if targetSession == "current":
+            session = RegistrationTools.activeSession()
+        else:
+            session = db.session.execute(select(Session).where(Session.number == int(targetSession))).scalar_one_or_none()
+        if not session:
+            return jsonify({'error':'Could not locate session'})
+        
+        student = db.session.execute(select(Student).where(Student.id == studentID)).scalar_one_or_none()
+        if not student:
+            return jsonify({'error':'Unknown student ID'})
+        
+        dayOrder = ["Monday", "Wednesday", "Thursday", "Friday"]
+
+        electives = RegistrationTools.chosenElectivesForSessions(student, session)
+        enrollmentCounts = RegistrationTools.currentEnrollmentCounts(electives)
+        sortedElectives = sorted(electives, key=lambda se: (dayOrder.index(se.day), se.rotation))
+        seParts = []
+        chosenElectiveIDs = []
+        for se in sortedElectives:
+            chosenElectiveIDs.append(se.id)
+            seParts.append({'id':se.id, 'day':se.day, 'rotation':se.rotation, 'name':se.elective.name, 'seats_left':enrollmentCounts[se.id]["remaining"]})
+
+        subq = select(SessionElective).where(SessionElective.id.not_in(chosenElectiveIDs))\
+                                      .join(Session).where(SessionElective.session == session)
+        remainingElectives = db.session.scalars(subq).fetchall()
+        enrollmentCounts = RegistrationTools.currentEnrollmentCounts(remainingElectives)
+        sortedRemainingElectives = sorted(remainingElectives, key=lambda se: (dayOrder.index(se.day), se.rotation))
+        sreParts = []
+        for sre in sortedRemainingElectives:
+            sreParts.append({'id':sre.id, 'day':sre.day, 'rotation':sre.rotation, 'name':sre.elective.name, 'seats_left':enrollmentCounts[sre.id]["remaining"]})
+
+        return jsonify({"enrolled":seParts, "available":sreParts})
+
+    else:
+        app.logger.error(f"json generator received unknown request: {task}")
+        return jsonify()
 
 # Not a flask route. Only called internally, but from inside flask contexts.
 # This function needs to return to its caller what it wants to show on the screen.
