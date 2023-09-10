@@ -49,6 +49,7 @@ else:
     db_port     = 3306
     db_name     = "***REMOVED***"
     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle' : 280} # https://help.pythonanywhere.com/pages/UsingSQLAlchemywithMySQL/
 
 # A environmental key is set on the ElasticBeanstalk instance to let us know when this code is running local vs in AWS
 # if "INDIGO_AWS" in os.environ:

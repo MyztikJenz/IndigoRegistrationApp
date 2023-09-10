@@ -23,11 +23,11 @@ from database.configure import *
 # x Output of schedules
 # x Knowing which kids have yet to fill something out.
 # x Cleaning up electives list
+# x Modify student option in admin page
+# x Need a schedule of which electives are held when (for pre-planning; just like college)
 # testing
 # Need a /x/demo account
-# x Need a schedule of which electives are held when (for pre-planning; just like college)
 # Fix the 0 seats bug
-# x Modify student option in admin page
 # "priority boarding" list
 
 # Notes
