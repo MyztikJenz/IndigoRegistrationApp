@@ -33,17 +33,28 @@ application = app = Flask(__name__, template_folder="../templates")
 app.config["SECRET_KEY"] = "***REMOVED***"
 
 # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
-db_username = os.environ["RDS_USERNAME"]
-db_password = os.environ["RDS_PASSWORD"]
-db_host     = os.environ["RDS_HOSTNAME"]
-db_port     = int(os.environ["RDS_PORT"])
-db_name     = os.environ["RDS_DB_NAME"]
+# db_username = os.environ["RDS_USERNAME"]
+# db_password = os.environ["RDS_PASSWORD"]
+# db_host     = os.environ["RDS_HOSTNAME"]
+# db_port     = int(os.environ["RDS_PORT"])
+# db_name     = os.environ["RDS_DB_NAME"]
+
+if "RUN_LOCALLY" in os.environ:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finaldeploytest2.sqlite"
+else:
+    # PythonAnywhere
+    db_username = "***REMOVED***"
+    db_password = "***REMOVED***"
+    db_host     = "***REMOVED***"
+    db_port     = 3306
+    db_name     = "***REMOVED***"
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 # A environmental key is set on the ElasticBeanstalk instance to let us know when this code is running local vs in AWS
-if "INDIGO_AWS" in os.environ:
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
-else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finaldeploytest2.sqlite"
+# if "INDIGO_AWS" in os.environ:
+#     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+# else:
+#     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finaldeploytest2.sqlite"
 
 db = SQLAlchemy(app)
 
