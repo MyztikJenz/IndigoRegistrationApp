@@ -39,6 +39,29 @@
             text-align: right;
             font-weight: bold;
         }
+
+        .submitButton {
+            background: linear-gradient(#74bdf8,#2b82fc);
+            color: white;
+            padding: 4px 12px;
+            min-width: 88px;
+            border: none;
+            font: inherit;
+            border-radius: 4px;
+            outline: none;
+            text-decoration: none;
+            cursor: default;
+            font-weight: 400;
+            box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.30), 0px 1px 1px rgba(0, 0, 0, .4);
+            margin-top: 4px;
+
+            &:active {
+                background: linear-gradient(#4faefc, #006bff);
+                color: #fff;
+                position: relative;
+            }
+        }
+
     </style>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -103,6 +126,28 @@
                 });
             });
         });
+
+        $(function() {
+            $('#openStudentScheduleButton').click(function() {
+                studentID = $("option:selected", $('#modify_assignment_student')).attr('value')
+
+                if (studentID == "no_name") {
+                    return
+                }
+
+                $.getJSON("/_json_/student_access_key", {"sID": studentID}, function(data) {
+                    if (data['error']) {
+                        alert("Error: " + data['error'])
+                    }
+                    else {
+                        access_key = data['key']
+                        url = window.location.origin + "/x/" + access_key
+                        window.open(url, '_blank')
+                    }
+                });
+            });
+        });
+
     </script>
 </head>
 <body>
@@ -167,7 +212,7 @@
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="session_upload">
                 <input type=file name="sessions">
-                <input type=submit value=Upload>
+                <button class="submitButton" type="submit">Upload</button>
             </form>
         </p>
         <hr style="max-width:350px;margin-left:0px;">
@@ -176,7 +221,7 @@
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="roster_upload">
                 <input type=file name="roster">
-                <input type=submit value=Upload>
+                <button class="submitButton" type="submit">Upload</button>
             </form>
         </p>
         <hr style="max-width:350px;margin-left:0px;">
@@ -194,7 +239,7 @@
                 </select>
                 <br>
                 <input type=file name="electives">
-                <input type=submit value=Upload>
+                <button class="submitButton" type="submit">Upload</button>
             </form>
         </p>
         <hr style="max-width:350px;margin-left:0px;">
@@ -211,7 +256,7 @@
                 </select>
                 <br>
                 <input type=file name="assignments">
-                <input type=submit value=Upload>
+                <button class="submitButton" type="submit">Upload</button>
             </form>
         </p>
     </div>
@@ -221,7 +266,7 @@
                 CSVs of the enrolled student schedules for the current session.
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type = "hidden" name="formID" value="csv_schedules">
-                <input type = "submit" value="Download Schedules">
+                <button class="submitButton" type="submit">Download Schedules</button>
             </form>
         </p>
         <hr style="max-width:350px;margin-left:0px;">
@@ -230,7 +275,7 @@
                 Download a view of enrollment over the entire student body.
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type = "hidden" name="formID" value="enrollment_overview">
-                <input type = "submit" value="Download Overview">
+                <button class="submitButton" type="submit">Download Overview</button>
             </form>
         </p>
         <hr style="max-width:350px;margin-left:0px;">
@@ -240,7 +285,7 @@
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type = "hidden" name="formID" value="elective_schedules">
                 <input type = "checkbox" name="includeSeatsRemaining"> include seats remaining<br>
-                <input type = "submit" value="Download Schedule">
+                <button class="submitButton" type="submit">Download Schedule</button>
             </form>
         </p>
         <hr style="max-width:350px;margin-left:0px;">
@@ -271,6 +316,8 @@
                                     <option value="{{ student.id }}">{{ student.name }}</option>
                                 {% endfor %}
                             </select>
+                            &nbsp;&nbsp;
+                            <button class="submitButton" id="openStudentScheduleButton" type="button">Open Schedule</button>
                         </td>
                     </tr>
                     <tr>
@@ -292,7 +339,7 @@
                     <tr>
                         <td>&nbsp;</td>
                         <td>
-                            <input type = "submit" value="Modify Schedule">
+                            <button class="submitButton" type="submit">Modify Schedule</button>
                         </td>
                     </tr>
                 </table>

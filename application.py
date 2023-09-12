@@ -514,8 +514,16 @@ def generateJSON(task=None):
     if not task:
         return jsonify()
     
+    if task == "student_access_key":
+        studentID = request.args.get("sID")
+        student = db.session.execute(select(Student).where(Student.id == studentID)).scalar_one_or_none()
+        if not student:
+            return jsonify({'error':'Unknown student ID'})
+
+        return jsonify({'key': student.accessID})
+
     # Comes from the admin "modify assignments" page
-    if task == "student_assignments":
+    elif task == "student_assignments":
         studentID = request.args.get("sID")
         targetSession = request.args.get("session")
         session = None
