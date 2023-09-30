@@ -62,6 +62,30 @@
             }
         }
 
+        .sessions_table {
+            border-collapse: collapse;
+        }
+
+        .sessions_table thead {
+            background-color: darkgray;
+            font-weight: bold;
+            text-align: center;
+        }
+        .sessions_table td {
+            padding: 2px 5px 2px 5px;
+            /* max-width: 120px; */
+            border:1px solid black;
+            overflow: hidden;
+            text-align: center;
+        }
+        .sessions_table td.active {
+            background-color: lightgreen;
+        }
+        .sessions_table td.not_active {
+            background-color: lightcoral;
+        }
+
+
     </style>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -163,7 +187,7 @@
 <div class="container">
     <div class="left_side">
         <form method=post enctype=multipart/form-data action="/_admin_">
-        <input type="hidden" name="formID" value="startSession">
+        <input type="hidden" name="formID" value="start_session">
         <table>
             <thead>
                 <td colspan="2"><strong>Please be careful here...</strong> updating this changes the active session!</td>
@@ -173,26 +197,35 @@
                     <td>Current Session #</td>
                     <td>
                         <select id="sessionNumber" name="sessionNumber">
-                            <option name="1">1</option>
-                            <option name="2">2</option>
-                            <option name="3">3</option>
-                            <option name="4">4</option>
+                            {% for session in sessions %}
+                                <option name="{{ session.number }}" {{ "selected" if session.active }}>{{ session.number }}</option>
+                            {% endfor %}
                         </select>
                     </td>    
                 </tr>
                 <tr>
-                    <td style="vertical-align: top;"><label for="sessionStartDate">Registration start date</label>
-                        <p>
-                            Order goes:<br>
-                            1: Paolini-Ruiz-Bishop<br>
-                            2: Ruiz-Bishop-Paolini<br>
-                            3: Bishop-Paolini-Ruiz<br>
-                            4: Paolini-Ruiz-Bishop<br>
-                        </p>
+                    <td style="vertical-align: top;" colspan="2">
+                        <table class="sessions_table">
+                            <thead>
+                                <td>Session</td>
+                                <td>Priority</td>
+                                <td>Bishop/Vong</td>
+                                <td>Ruiz</td>
+                                <td>Paolini</td>
+                            </thead>
+                            <tbody>
+                                {% for session in sessions %}
+                                    <tr>
+                                        <td class="{{ 'active' if session.active else 'not_active' }}">{{ session.number }}</td>
+                                        <td><input type="checkbox" name="session_{{ session.number }}_active" value="Priority" {{ "checked" if session.Priority}}></td>
+                                        <td><input type="checkbox" name="session_{{ session.number }}_active" value="Bishop" {{ "checked" if session.Bishop}}></td>
+                                        <td><input type="checkbox" name="session_{{ session.number }}_active" value="Ruiz" {{ "checked" if session.Ruiz}}></td>
+                                        <td><input type="checkbox" name="session_{{ session.number }}_active" value="Paolini" {{ "checked" if session.Paolini}}></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </td>
-                    <td>
-                        <input type="text" name="sessionStartDate" id="sessionStartDate" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}">
-                    </td>    
                 </tr>
                 <tr>
                     <td>&nbsp;</td>
@@ -228,7 +261,7 @@
         <p>
             <strong>Elective Upload:</strong><p>
                 Note: if you must re-upload electives, you have to re-upload assignments as well<br>
-                (After clearing out SessionElective, Elective, and Assignment databases, in that order)
+                (After clearing out SessionElective, Elective, and Assignment tables, in that order)
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="elective_upload">
                 Session #: <select name="sessionNumber">
@@ -256,6 +289,18 @@
                 </select>
                 <br>
                 <input type=file name="assignments">
+                <button class="submitButton" type="submit">Upload</button>
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
+            <strong>Priority Enrollment Upload:</strong><p>
+                Students who are allowed to enroll when "priority" is selected above. The file you upload here must have student names that match exactly to the roster.
+                <p>
+                <strong>Note:</strong> uploading replaces previous entries
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type="hidden" name="formID" value="priority_assignment">
+                <input type=file name="priorities">
                 <button class="submitButton" type="submit">Upload</button>
             </form>
         </p>

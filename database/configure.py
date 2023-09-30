@@ -81,6 +81,7 @@ class Session(Base):
     Ruiz: Mapped[bool]
     Paolini: Mapped[bool]
     Bishop: Mapped[bool]
+    Priority: Mapped[bool]
     electives: Mapped[List["SessionElective"]] = relationship(back_populates="session")
 
 class Elective(Base):
@@ -118,6 +119,12 @@ class AssignedClasses(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     studentID: Mapped[int]
     sessionElectiveID: Mapped[int]
+
+class PriorityEnrolling(Base):
+    __tablename__ = "priorityenrolling"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    studentID: Mapped[int]
+
 
 with app.app_context():
 # # #    db.create_all()
@@ -211,6 +218,23 @@ class RegistrationTools():
         result = db.session.execute(q).scalar_one_or_none()
         return result
 
+    @classmethod
+    def setActiveSession(cls, sessionNumber=None):
+        if not sessionNumber:
+            return
+        
+        active = RegistrationTools.activeSession()
+        if active.number == sessionNumber:
+            return # Nothing to do, it's the same session number
+        
+        q = select(Session).where(Session.number == sessionNumber)
+        nextActive = db.session.execute(q).scalar_one_or_none()
+        
+        active.active = False
+        nextActive.active = True
+        db.session.commit()
+
+        return nextActive
 
     @classmethod
     def registerStudent(cls, student, electives):
@@ -386,6 +410,36 @@ class ConfigUtils():
         db.session.commit()
         return('ok', f"Performed {countOfAssignments} assignments.")
         
+    @classmethod
+    def assignPriorityEnrollment(cls, data=None, sessionNumber=None):
+        if not data:
+            return('error', "No data found")
+        if not sessionNumber:
+            return('error', "Session number is required")
+        
+        # Deletes all existing records
+        stmt = delete(PriorityEnrolling)
+        db.session.execute(stmt)
+        db.session.commit()
+
+        session = db.session.scalars(select(Session).where(Session.number == sessionNumber)).first()
+        countOfAssignments = 0
+        r = csv.DictReader(data)
+        for row in r:
+            # Find the student and the elective they need to take.
+            sel = select(Student).where(Student.name == row["student"])
+            student = db.session.execute(sel).scalar_one_or_none()
+            if not student:
+                db.session.rollback()
+                return('error', f"Could not find a student record for {row['student']}")
+            
+            p = PriorityEnrolling(studentID=student.id)
+            db.session.add(p)
+            countOfAssignments += 1
+
+        db.session.commit()
+        return('ok', f"Performed {countOfAssignments} assignments.")
+
     # @classmethod
     # def old_uploadSpecificAssignments(cls, data=None, sessionNumber=None):
     #     if not data:

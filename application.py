@@ -18,22 +18,14 @@ from database.configure import *
 
 ### 
 ### What's left
-# x Elective Descriptions
-# x Admin functionality to get things started
-# x Output of schedules
-# x Knowing which kids have yet to fill something out.
-# x Cleaning up electives list
-# x Modify student option in admin page
-# x Need a schedule of which electives are held when (for pre-planning; just like college)
 # testing
 # Need a /x/demo account
-# Fix the 0 seats bug
-# "priority boarding" list
+# Fix the 0 seats bug (in HTML, backend is fixed)
+# x "priority boarding" list
+# generate input for AssignedClasses from session 1 two-part electives. Might be able to do this at session number update time.
 
 # Notes
 # In session 2, we can use the AssignedClasses infrastructure to pull "part 2" electives out and auto-assign them.
-# We need a better way to instantiate the database. It's only created at app launch time, which means racing deployment
-#   or restarting the server if we fail. 
 
 @app.route("/")
 def hello_world():
@@ -61,6 +53,15 @@ def registrationPage(accessID=None):
     teacherColumn = getattr(Session, student.teacher)
     subq = select(teacherColumn).select_from(Session).where(Session.active == True)
     isAllowToRegister = db.session.scalar(subq)
+
+    if not isAllowToRegister and currentSession.Priority == 1:
+        # Maybe they are on the priority list
+        subq = select(func.count(PriorityEnrolling.id)).where(PriorityEnrolling.studentID == student.id)
+        ans = db.session.execute(subq).scalar_one_or_none()
+        if ans == 1:
+            app.logger.info(f"[{accessID}] granting access, on priority list")
+            isAllowToRegister = True
+
     if not isAllowToRegister:
         return render_template("notyet.html", teacher=student.teacher)
 
@@ -266,14 +267,29 @@ def registrationPage(accessID=None):
 @app.route("/_admin_", methods=['GET', 'POST'])
 def adminPage():
     if request.method == "POST":
-        # if request.form["formID"] == "startSession":
-        #     sessionNumber = request.form["sessionNumber"]
-        #     sessionStartDate = request.form["sessionStartDate"] + " 07:00:00"
+        if request.form["formID"] == "start_session":
+            sessionNumber = int(request.form["sessionNumber"])
+            currentSession = RegistrationTools.activeSession()
 
-        #     date_format = '%Y-%m-%d %H:%M:%S'
-        #     startDate = datetime.datetime.strptime(sessionStartDate, date_format)
+            if currentSession.number != sessionNumber:
+                currentSession = RegistrationTools.setActiveSession(sessionNumber)
 
-        if request.form["formID"] == "modify_elective_assignment":
+            columns = ["Bishop", "Ruiz", "Paolini", "Priority"]
+            for sessionNum in range(1,5):
+                active = request.form.getlist(f"session_{sessionNum}_active")
+                sessionRecord = db.session.execute(select(Session).where(Session.number == sessionNum)).scalar_one_or_none()
+                # Clear all the values
+                for column_name in columns:
+                    setattr(sessionRecord, column_name, 0)
+                # Set the new values
+                for column_name in active:
+                    setattr(sessionRecord, column_name, 1)
+                db.session.commit()
+
+            flash(f"Updated session info", "ok")
+            return redirect(request.url)
+
+        elif request.form["formID"] == "modify_elective_assignment":
             studentID = int(request.form["modify_assignment_student"])
             student = db.session.execute(select(Student).where(Student.id == studentID)).scalar_one_or_none()
             if not student:
@@ -297,7 +313,7 @@ def adminPage():
             flash(f"Updated classes for {student.name}", "ok")
             return redirect(request.url)
 
-        if request.form["formID"] == "elective_schedules":
+        elif request.form["formID"] == "elective_schedules":
             currentSession = RegistrationTools.activeSession()
 
             includeSeatCount = True if request.form["includeSeatsRemaining"] == "on" else False
@@ -344,7 +360,7 @@ def adminPage():
             return Response(fileBuffer.getvalue(), mimetype="text/csv", headers={"Content-Disposition":f"attachment;filename=Session #{currentSession.number} Schedule of Electives.csv"})
 
 
-        if request.form["formID"] == "enrollment_overview":
+        elif request.form["formID"] == "enrollment_overview":
             currentSession = RegistrationTools.activeSession()
 
             # I feel this is something that the database should be able to do with enough subqueries but I couldn't quite get it figured out.
@@ -389,7 +405,7 @@ def adminPage():
             
             return Response(fileBuffer.getvalue(), mimetype="text/csv", headers={"Content-Disposition":f"attachment;filename=Session #{currentSession.number} enrollment overview.csv"})
 
-        if request.form["formID"] == "csv_schedules":
+        elif request.form["formID"] == "csv_schedules":
             currentSession = RegistrationTools.activeSession()
             zipBuffer = io.BytesIO()
             zipOutput = zipfile.ZipFile(zipBuffer, "w")
@@ -422,7 +438,7 @@ def adminPage():
             zipOutput.close()
             return Response(zipBuffer.getvalue(), mimetype="application/zip", headers={"Content-Disposition":f"attachment;filename=Session #{currentSession.number} electives.zip"})
         
-        if request.form["formID"] == "session_upload":
+        elif request.form["formID"] == "session_upload":
             if 'sessions' not in request.files:
                 flash("No session found", 'error')
                 return redirect(request.url)
@@ -438,7 +454,7 @@ def adminPage():
             return redirect(request.url)
 
 
-        if request.form["formID"] == "roster_upload":
+        elif request.form["formID"] == "roster_upload":
             if 'roster' not in request.files:
                 flash("No roster found", 'error')
                 return redirect(request.url)
@@ -487,13 +503,32 @@ def adminPage():
             (code, result) = ConfigUtils.uploadSpecificAssignments(assignments, sessionNumber)
             flash(result, code)
             return redirect(request.url)
+
+        elif request.form["formID"] == "priority_assignment":
+            if 'priorities' not in request.files:
+                flash("No priorities file found", 'error')
+                return redirect(request.url)
+
+            priorities = request.files['priorities']
+            if priorities.filename == '':
+                flash("No selected file", 'error')
+                return redirect(request.url)
+            
+            priorities = map(lambda x: str(x, 'utf-8'), priorities)
+            sessionNumber = request.form["sessionNumber"]
+            (code, result) = ConfigUtils.assignPriorityEnrollment(priorities, sessionNumber)
+            flash(result, code)
+            return redirect(request.url)
+
         else:
             flash("Unknown formID", 'error')
             return redirect(request.url)
     else:
         studentCount = db.session.query(func.count(Student.id)).scalar()
         students = db.session.scalars(select(Student).order_by(Student.name)).fetchall()
-        return render_template('admin.html', studentCount=studentCount, students=students)
+        sessions = db.session.scalars(select(Session)).fetchall()
+
+        return render_template('admin.html', studentCount=studentCount, students=students, sessions=sessions)
 
 @app.route("/class/<classFile>", methods=['GET'])
 def returnClassFile(classFile=None):
@@ -604,7 +639,14 @@ def showSchedule(student, session=None, electives=None):
 
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
-# with app.app_context():
+with app.app_context():
+    sessionRecord = db.session.execute(select(Session).where(Session.number == 2)).scalar_one_or_none()
+    # sessionRecord.Ruiz = 1
+    # sessionRecord.Priority = 1
+    # x = getattr(Session, "Ruiz")
+    # pdb.set_trace()
+    # setattr(sessionRecord, x.name, 0)
+    # db.session.commit()
 #     currentSession = RegistrationTools.activeSession()
 
 #     allR1 = [["Rotation 1"]]
