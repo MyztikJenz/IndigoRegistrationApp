@@ -85,6 +85,13 @@
             background-color: lightcoral;
         }
 
+        .flashes {
+            background-color: aquamarine;
+            padding: 1px 1px 1px 1px;
+            width: 50%;
+            border-radius: 10px;
+        }
+
 
     </style>
 
@@ -177,11 +184,13 @@
 <body>
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-        <ul class=flashes>
+    <div class="flashes">
+        <ul>
         {% for category, message in messages %}
             <li>{{ message }}</li>
         {% endfor %}
         </ul>
+    </div>
     {% endif %}
 {% endwith %}
 <div class="container">
