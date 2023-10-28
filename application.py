@@ -3,7 +3,7 @@ from flask import Flask, request, flash, redirect, send_file
 from flask import render_template, Response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 
 import logging
 import pprint
@@ -20,12 +20,12 @@ from database.configure import *
 ### What's left
 # testing
 # Need a /x/demo account
-# Fix the 0 seats bug (in HTML, backend is fixed)
+# Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
 # x "priority boarding" list
-# generate input for AssignedClasses from session 1 two-part electives. Might be able to do this at session number update time.
-
-# Notes
-# In session 2, we can use the AssignedClasses infrastructure to pull "part 2" electives out and auto-assign them.
+# x generate input for AssignedClasses from session 1 two-part electives. Might be able to do this at session number update time.
+# Show previous electives in signup form
+# Remove two-part electives as being options for new students from even-numbers sessions (still need them to be available)
+# sessionelectives need to update based on session, which means the form that gets uploaded needs some notion of session attachment
 
 @app.route("/")
 def hello_world():
@@ -267,7 +267,47 @@ def registrationPage(accessID=None):
 @app.route("/_admin_", methods=['GET', 'POST'])
 def adminPage():
     if request.method == "POST":
-        if request.form["formID"] == "start_session":
+        if request.form["formID"] == "two_session_assignments":
+            sessionNumber = int(request.form["sessionNumber"])
+            prev_sessionNumber = sessionNumber - 1
+            s = select(Student.name.label("student_name"), SessionElective.day, SessionElective.rotation, Elective.name.label("elective_name")) \
+                            .select_from(Student) \
+                            .join(Schedule).where(Schedule.studentID == Student.id) \
+                            .join(SessionElective).where(SessionElective.sessionID == prev_sessionNumber) \
+                            .join(Elective).where(Elective.id == SessionElective.electiveID) \
+                                            .where(or_(Elective.multisession == True,
+                                                        Elective.name == "RSP/Homework Help")) \
+                            .order_by(Student.name)
+            records = db.session.execute(s).fetchall()
+
+            fileBuffer = io.StringIO()
+            w = csv.writer(fileBuffer, quoting=csv.QUOTE_ALL)
+            w.writerow(["student", "rotation", "Monday", "Wednesday", "Thursday", "Friday"])
+
+            currentStudentName = None
+            r1 = dict(Monday="", Wednesday="", Thursday="", Friday="")
+            r2 = dict(Monday="", Wednesday="", Thursday="", Friday="")
+            for r in records:
+                if currentStudentName != r.student_name:
+                    if currentStudentName != None:
+                        # Write out the student to the CSV
+                        if all(value == "" for value in r1.values()) == False:
+                            w.writerow([currentStudentName, "1", r1["Monday"], r1["Wednesday"], r1["Thursday"], r1["Friday"]])
+                        if all(value == "" for value in r2.values()) == False:
+                            w.writerow([currentStudentName, "2", r2["Monday"], r2["Wednesday"], r2["Thursday"], r2["Friday"]])
+                    currentStudentName = r.student_name
+                    r1 = dict(Monday="", Wednesday="", Thursday="", Friday="")
+                    r2 = dict(Monday="", Wednesday="", Thursday="", Friday="")
+                
+                if r.rotation in [1,3]:
+                    r1[r.day] = r.elective_name
+
+                if r.rotation in [2,3]:
+                    r2[r.day] = r.elective_name
+
+            return Response(fileBuffer.getvalue(), mimetype="text/csv", headers={"Content-Disposition":f"attachment;filename=Session #{sessionNumber} two-session electives input.csv"})
+
+        elif request.form["formID"] == "start_session":
             sessionNumber = int(request.form["sessionNumber"])
             currentSession = RegistrationTools.activeSession()
 
@@ -639,8 +679,20 @@ def showSchedule(student, session=None, electives=None):
 
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
-with app.app_context():
-    sessionRecord = db.session.execute(select(Session).where(Session.number == 2)).scalar_one_or_none()
+# with app.app_context():
+#     s = select(Student.name.label("student_name"), SessionElective.day, SessionElective.rotation, Elective.name) \
+#                        .select_from(Student) \
+#                        .join(Schedule).where(Schedule.studentID == Student.id) \
+#                        .join(SessionElective).where(SessionElective.sessionID == 1) \
+#                        .join(Elective).where(Elective.id == SessionElective.electiveID) \
+#                                       .where(or_(Elective.multisession == True,
+#                                                  Elective.name == "RSP/Homework Help")) \
+#                        .order_by(Student.name)
+#     records = db.session.execute(s).fetchall()
+
+#     for r in records:
+#         print(r)
+    #sessionRecord = db.session.execute(select(Session).where(Session.number == 2)).scalar_one_or_none()
     # sessionRecord.Ruiz = 1
     # sessionRecord.Priority = 1
     # x = getattr(Session, "Ruiz")

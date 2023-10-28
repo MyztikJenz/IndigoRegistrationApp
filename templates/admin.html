@@ -237,11 +237,13 @@
         </table>
         </form>
         <hr style="max-width:350px;margin-left:0px;">
-        <p>
+        <p style="background-color: lightgray;">
             Generally speaking, go in the order presented here otherwise you'll probably encounter errors (some tables need data from the ones before it)
         </p>
         <p>
             <strong>Session Upload:</strong><p>
+            The list of elective sessions that will be run throughout the year. Populates the <code>sessions</code> table. You only need to run this once per year.
+            <p>
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="session_upload">
                 <input type=file name="sessions">
@@ -251,6 +253,9 @@
         <hr style="max-width:350px;margin-left:0px;">
         <p>
             <strong>Roster Upload:</strong> Student count in database: {{ studentCount }}<p>
+            The list of students that will be taking electives. Populates the <code>students</code> table. You can drop and re-upload this table if need be, 
+            but it's better to just edit as needed (dropping students isn't necessary, but adding new ones will be).
+            <p>
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="roster_upload">
                 <input type=file name="roster">
@@ -262,6 +267,9 @@
             <strong>Elective Upload:</strong><p>
                 Note: if you must re-upload electives, you have to re-upload assignments as well<br>
                 (After clearing out SessionElective, Elective, and Assignment tables, in that order)
+                <p>
+                    The list of electives for a given session. Populates the <code>electives</code> table. You will need to upload one of these per session.
+                </p>
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="elective_upload">
                 Session #: <select name="sessionNumber">
@@ -279,6 +287,7 @@
         <p>
             <strong>Specific Assignment Upload:</strong><p>
                 When you need to assign students to specific classes. The file you upload here must have student names that match exactly to the roster.
+                Populates the <code>assignedclasses</code> table.
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="specific_assignment">
                 Session #: <select name="sessionNumber">
@@ -295,7 +304,8 @@
         <hr style="max-width:350px;margin-left:0px;">
         <p>
             <strong>Priority Enrollment Upload:</strong><p>
-                Students who are allowed to enroll when "priority" is selected above. The file you upload here must have student names that match exactly to the roster.
+                Students who are allowed to enroll when "priority" is selected above. The file you upload here must have student names that match 
+                exactly to the roster. Populates the <code>priorityenrollment</code> table.
                 <p>
                 <strong>Note:</strong> uploading replaces previous entries
             <form method=post enctype=multipart/form-data action="/_admin_">
@@ -306,6 +316,23 @@
         </p>
     </div>
     <div class = "right_side">
+        <p>
+            <strong>Two-Session Elective Download:</strong><p>
+                For the selected session, download a CSV that is formatted for upload to <code><b>Specific Assignment</b></code>.
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type = "hidden" name="formID" value="two_session_assignments">
+                Session #: <select id="sessionNumber" name="sessionNumber">
+                    {% for session in sessions %}
+                        {% if session.number is divisibleby(2) %}
+                            <option name="{{ session.number }}">{{ session.number }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <br>
+            <button class="submitButton" type="submit">Download Two-Session Assignments</button>
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
         <p>
             <strong>CSV Schedules Download:</strong><p>
                 CSVs of the enrolled student schedules for the current session.
