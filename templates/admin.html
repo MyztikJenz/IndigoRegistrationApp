@@ -274,10 +274,12 @@
         <hr style="max-width:350px;margin-left:0px;">
         <p>
             <strong>Elective Upload:</strong><p>
-                Note: if you must re-upload electives, you have to re-upload assignments as well<br>
-                (After clearing out SessionElective, Elective, and Assignment tables, in that order)
+                Note: Re-uploading electives for a session is not well supported. You will need to manually
+                clear out both the SessionElectives and Schedules tables (if anyone's already selected a class). 
+                It's best if you avoid the need to do this.
                 <p>
-                    The list of electives for a given session. Populates the <code>electives</code> table. You will need to upload one of these per session.
+                    The list of electives for a given session. Populates the <code>electives</code> and <code>sessionelectives</code> tables. You will need 
+                    to upload one of these per session.
                 </p>
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="elective_upload">

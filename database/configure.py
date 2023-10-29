@@ -14,7 +14,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 
-from sqlalchemy import select, func, and_, delete
+from sqlalchemy import select, func, and_, delete, or_
 
 import datetime
 import pdb
@@ -40,7 +40,7 @@ app.config["SECRET_KEY"] = "***REMOVED***"
 # db_name     = os.environ["RDS_DB_NAME"]
 
 if "RUN_LOCALLY" in os.environ:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finaldeploytest2.sqlite"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///Session1_testbed.sqlite"
 else:
     # PythonAnywhere
     db_username = "***REMOVED***"
@@ -338,23 +338,48 @@ class ConfigUtils():
 
         r = csv.DictReader(data)
         for row in r:
-            # app.logger.info(f"{sessionNumber}: {row['name']} - {row['rotations']}")
-            # Create an entry into the electives table. It may already exist, so we should consider updating it. 
-            elective = Elective(name=row['name'], lead=row['lead'], maxAttendees=int(row['maxAttendees']), multisession=(row["multisession"]=="TRUE"), 
-                                room=row["room"], consideredPE=(row["consideredPE"]=="TRUE"), assignOnly=(row["assignOnly"]=="TRUE"))
-            db.session.add(elective)
-            try:
-                db.session.commit()
-            except IntegrityError as error:
-                # TODO - jimt - Allow updating entries in the database, not just ignoring.
-                # Need to catch both sqlite and mysql errors
-                if "UNIQUE constraint failed: electives.name" not in str(error) and "for key 'electives.name'" not in str(error):
-                    app.logger.error(error)
-                    return('error', "DB error: " + str(error))
+            targetSessions = list(map(lambda x: int(x), row['sessions'].split(",")))
+            if session.number not in targetSessions:
+                # This elective is not scheduled for this session, we can ignore it.
+                app.logger.info(f"Skipping upload of elective {row['name']}, not scheduled for session {session.number}")
+                continue
+
+            # Do we have an existing elective? We should update it (if needed)
+            elective = db.session.scalars(select(Elective).where(Elective.name == row['name'])).first()
+            if elective:
+                shouldUpdate = False
+                if elective.lead != row['lead']:
+                    elective.lead = row['lead']
+                    shouldUpdate = True
                 
-                db.session.rollback()
-                # There's already an elective in the database. Get a reference to that one instead.
-                elective = db.session.scalars(select(Elective).where(Elective.name == row['name'])).first()
+                if elective.maxAttendees != int(row['maxAttendees']):
+                    elective.maxAttendees = int(row['maxAttendees'])
+                    shouldUpdate = True
+
+                if elective.multisession != (row["multisession"]=="TRUE"):
+                    elective.multisession = (row["multisession"]=="TRUE")
+                    shouldUpdate = True
+
+                if elective.room != row['room']:
+                    elective.room = row['room']
+                    shouldUpdate = True
+
+                if elective.consideredPE != (row["consideredPE"]=="TRUE"):
+                    elective.consideredPE = (row["consideredPE"]=="TRUE")
+                    shouldUpdate = True
+
+                if elective.assignOnly != (row["assignOnly"]=="TRUE"):
+                    elective.assignOnly = (row["assignOnly"]=="TRUE")
+                    shouldUpdate = True
+
+                if shouldUpdate:
+                    db.session.commit()
+            else:
+                # Create an entry into the electives table.
+                elective = Elective(name=row['name'], lead=row['lead'], maxAttendees=int(row['maxAttendees']), multisession=(row["multisession"]=="TRUE"), 
+                                    room=row["room"], consideredPE=(row["consideredPE"]=="TRUE"), assignOnly=(row["assignOnly"]=="TRUE"))
+                db.session.add(elective)
+                db.session.commit()
 
             for rotation in row["rotations"].split(","):
                 if row["day"] == "*":
@@ -395,7 +420,8 @@ class ConfigUtils():
                 if electiveName:
                     subq = select(SessionElective).select_from(Elective).where(Elective.name.startswith(electiveName)).join(SessionElective)\
                                                                         .where(SessionElective.electiveID == Elective.id)\
-                                                                        .where(SessionElective.rotation == int(row["rotation"]))\
+                                                                        .where(or_(SessionElective.rotation == int(row["rotation"]),\
+                                                                                   SessionElective.rotation == 3))\
                                                                         .where(SessionElective.day == day)\
                                                                         .join(Session).where(SessionElective.session == session)
 
