@@ -184,7 +184,8 @@ def registrationPage(accessID=None):
     def _findMandatoryElectives(day, electives):
         r1 = list(filter(lambda e: e.day == day and e.rotation == 1, electives))
         r2 = list(filter(lambda e: e.day == day and e.rotation == 2, electives))
-        return (r1, r2)
+        r3 = list(filter(lambda e: e.day == day and e.rotation == 3, electives))
+        return (r1, r2, r3)
 
     def _findChoosableElectives(day, rotation, electives, session):
         fileredElectives = list(filter(lambda e: e.day == day and e.rotation == rotation and e.elective.assignOnly == False, electives))
@@ -194,85 +195,33 @@ def registrationPage(accessID=None):
         # TODO - jimt - Would be nice if the classes were ordered alphabetically
         return fileredElectives
 
-    (mon_r1_mandatory, mon_r2_mandatory) = _findMandatoryElectives("Monday", all_mandatory_electives)
-    mon_r1 = mon_r1_mandatory if len(mon_r1_mandatory) else _findChoosableElectives("Monday", 1, electives, currentSession)
-    mon_r2 = mon_r2_mandatory if len(mon_r2_mandatory) else _findChoosableElectives("Monday", 2, electives, currentSession)
+    def _availableElectives(day, allElectives, mandatoryElectives, session):
+        r1 = r2 = r3 = []
+        (r1_mandatory, r2_mandatory, r3_mandatory) = _findMandatoryElectives(day, mandatoryElectives)
+        if len(r1_mandatory):
+            r1 = r1_mandatory
+        else:
+            if len(r3_mandatory) == 0:
+                r1 = _findChoosableElectives(day, 1, allElectives, session)
 
-    (wed_r1_mandatory, wed_r2_mandatory) = _findMandatoryElectives("Wednesday", all_mandatory_electives)
-    wed_r1 = wed_r1_mandatory if len(wed_r1_mandatory) else _findChoosableElectives("Wednesday", 1, electives, currentSession)
-    wed_r2 = wed_r2_mandatory if len(wed_r2_mandatory) else _findChoosableElectives("Wednesday", 2, electives, currentSession)
+        if len(r2_mandatory):
+            r2 = r2_mandatory
+        else:
+            if len(r3_mandatory) == 0:
+                r2 = _findChoosableElectives(day, 2, allElectives, session)
 
-    (thu_r1_mandatory, thu_r2_mandatory) = _findMandatoryElectives("Thursday", all_mandatory_electives)
-    thu_r1 = thu_r1_mandatory if len(thu_r1_mandatory) else _findChoosableElectives("Thursday", 1, electives, currentSession)
-    thu_r2 = thu_r2_mandatory if len(thu_r2_mandatory) else _findChoosableElectives("Thursday", 2, electives, currentSession)
+        if len(r3_mandatory):
+            r3 = r3_mandatory
+        else:
+            if len(r1_mandatory) == 0 and len(r2_mandatory) == 0:
+                r3 = _findChoosableElectives(day, 3, allElectives, session)
 
-    (fri_r1_mandatory, fri_r2_mandatory) = _findMandatoryElectives("Friday", all_mandatory_electives)
-    fri_r1 = fri_r1_mandatory if len(fri_r1_mandatory) else _findChoosableElectives("Friday", 1, electives, currentSession)
-    fri_r2 = fri_r2_mandatory if len(fri_r2_mandatory) else _findChoosableElectives("Friday", 2, electives, currentSession)
+        return(r1, r2, r3)
 
-
-    # mon_r1_mandatory = list(filter(lambda e: e.day == "Monday" and e.rotation == 1, all_mandatory_electives))
-    # if len(mon_r1_mandatory) > 0:
-    #     mon_r1 = mon_r1_mandatory
-    # else:
-    #     mon_r1 = _findChoosableElectives("Monday", 1, electives, currentSession)
-    #     # mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
-    #     # and e.elective.multisession == False if currentSession.number % 2 == 0
-
-    # mon_r2_mandatory = list(filter(lambda e: e.day == "Monday" and e.rotation == 2, all_mandatory_electives))
-    # if len(mon_r2_mandatory) > 0:
-    #     mon_r2 = mon_r2_mandatory
-    # else:
-    #     mon_r2 = list(filter(lambda e: e.day == "Monday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
-
-    # wed_r1_mandatory = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 1, all_mandatory_electives))
-    # if len(wed_r1_mandatory) > 0:
-    #     wed_r1 = wed_r1_mandatory
-    # else:
-    #     wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
-
-    # wed_r2_mandatory = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 2, all_mandatory_electives))
-    # if len(wed_r2_mandatory) > 0:
-    #     wed_r2 = wed_r2_mandatory
-    # else:
-    #     wed_r2 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
-
-    # thu_r1_mandatory = list(filter(lambda e: e.day == "Thursday" and e.rotation == 1, all_mandatory_electives))
-    # if len(thu_r1_mandatory) > 0:
-    #     thu_r1 = thu_r1_mandatory
-    # else:
-    #     thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
-  
-    # thu_r2_mandatory = list(filter(lambda e: e.day == "Thursday" and e.rotation == 2, all_mandatory_electives))
-    # if len(thu_r2_mandatory) > 0:
-    #     thu_r2 = thu_r2_mandatory
-    # else:
-    #     thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
-
-    # fri_r1_mandatory = list(filter(lambda e: e.day == "Friday" and e.rotation == 1, all_mandatory_electives))
-    # if len(fri_r1_mandatory) > 0:
-    #     fri_r1 = fri_r1_mandatory
-    # else:
-    #     fri_r1 = list(filter(lambda e: e.day == "Friday" and e.rotation == 1 and e.elective.assignOnly == False, electives))
-
-    # fri_r2_mandatory = list(filter(lambda e: e.day == "Friday" and e.rotation == 2, all_mandatory_electives))
-    # if len(fri_r2_mandatory) > 0:
-    #     fri_r2 = fri_r2_mandatory
-    # else:
-    #     fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation == 2 and e.elective.assignOnly == False, electives))
-
-    mon_r3 = wed_r3 = thu_r3 = fri_r3 = []
-    if len(mon_r1_mandatory) == 0 and len(mon_r2_mandatory) == 0:
-        mon_r3 = list(filter(lambda e: e.day == "Monday" and e.rotation == 3, electives))
-
-    if len(wed_r1_mandatory) == 0 and len(wed_r2_mandatory) == 0:
-        wed_r3 = list(filter(lambda e: e.day == "Wednesday" and e.rotation == 3, electives))
-    
-    if len(thu_r1_mandatory) == 0 and len(thu_r2_mandatory) == 0:
-        thu_r3 = list(filter(lambda e: e.day == "Thursday" and e.rotation == 3, electives))
-
-    if len(fri_r1_mandatory) == 0 and len(fri_r2_mandatory) == 0:
-        fri_r3 = list(filter(lambda e: e.day == "Friday" and e.rotation == 3, electives))
+    (mon_r1, mon_r2, mon_r3) = _availableElectives("Monday", electives, all_mandatory_electives, currentSession)
+    (wed_r1, wed_r2, wed_r3) = _availableElectives("Wednesday", electives, all_mandatory_electives, currentSession)
+    (thu_r1, thu_r2, thu_r3) = _availableElectives("Thursday", electives, all_mandatory_electives, currentSession)
+    (fri_r1, fri_r2, fri_r3) = _availableElectives("Friday", electives, all_mandatory_electives, currentSession)
 
     electiveDescriptions = ""
     with open("electives/classes.json", 'r', encoding='utf-8') as f:
