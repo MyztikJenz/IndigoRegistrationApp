@@ -400,42 +400,28 @@
         <noscript>Elective Descriptions do not work without javacscript.</noscript>
     </div>
 
-    <!---
     <div class="previous_sessions">
-        <div>
-            <hr style="max-width:350px;margin-left:0px;">
-            <h4>Previous Sessions</h4>
-        </div>
+        <hr style="max-width:350px;margin-left:0px;">
+        <h4>Previous Sessions</h4>
+
+        {% if session3 %}
+            {% set session_title = "Session 3" %}
+            {% set previous_session = session3 %}
+            {% include "schedule_table.html" %}
+        {% endif %}
+
+        {% if session2 %}
+            {% set session_title = "Session 2" %}
+            {% set previous_session = session2 %}
+            {% include "schedule_table.html" %}
+        {% endif %}
+
+        {% if session1 %}
+            {% set session_title = "Session 1" %}
+            {% set previous_session = session1 %}
+            {% include "schedule_table.html" %}
+        {% endif %}
     </div>
-    <table class="previous">
-        <thead class="table_header_row">
-            <tr>
-                <td class="table_row"></td>
-                <td class="table_row">Monday</td>
-                <td class="table_row">Wednesday</td>
-                <td class="table_row">Thursday</td>
-                <td class="table_row">Friday</td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Session 1</td>
-                <td>
-                    PE<br>Filmmaking
-                </td>
-                <td>
-                    Class 2<br>Dungeons and Dragons
-                </td>
-                <td>
-                    PE<br>Class 4
-                </td>
-                <td>
-                    PE<br>Underwater Basketweaving
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    -->
 </body>
 </html>
 

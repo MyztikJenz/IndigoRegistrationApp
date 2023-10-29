@@ -251,6 +251,30 @@ def registrationPage(accessID=None):
 
     # TODO - jimt - Any electives that contain "exclusions", students that should not be placed together and are alread in a class
 
+    session1 = session2 = session3 = None
+    if currentSession.number > 1:
+        def _findPreviousSchedule(sessionNumber):
+            q = select(Session).where(Session.number == sessionNumber)
+            previousSession = db.session.execute(q).scalar_one_or_none()
+            previousElectives = RegistrationTools.chosenElectivesForSessions(student, previousSession)
+
+            previous = dict(mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation in [1,3], previousElectives))[0],
+                            wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [1,3], previousElectives))[0],
+                            thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [1,3], previousElectives))[0],
+                            fri_r1 = list(filter(lambda e: e.day == "Friday" and e.rotation in [1,3], previousElectives))[0],
+                            mon_r2 = list(filter(lambda e: e.day == "Monday" and e.rotation in [2,3], previousElectives))[0],
+                            wed_r2 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [2,3], previousElectives))[0],
+                            thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [2,3], previousElectives))[0],
+                            fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation in [2,3], previousElectives))[0])
+            return previous
+
+        if currentSession.number >= 2:
+            session1 = _findPreviousSchedule(1)
+        if currentSession.number >= 3:
+            session2 = _findPreviousSchedule(2)
+        if currentSession.number >= 4:
+            session3 = _findPreviousSchedule(3)
+    
     return render_template('registration.html', student=student, currentEnrollment=currentEnrollment, session=currentSession,
                                                 previousForm=previousForm, errors=errors,
                                                 mon_r1_electives=mon_r1, mon_r2_electives=mon_r2,
@@ -261,7 +285,10 @@ def registrationPage(accessID=None):
                                                 wed_r3_electives=wed_r3,
                                                 thu_r3_electives=thu_r3,
                                                 fri_r3_electives=fri_r3,
-                                                electiveDescriptions=electiveDescriptions
+                                                electiveDescriptions=electiveDescriptions,
+                                                session1=session1,
+                                                session2=session2,
+                                                session3=session3
                                                 )
 
 @app.route("/_admin_", methods=['GET', 'POST'])
@@ -648,19 +675,16 @@ def showSchedule(student, session=None, electives=None):
     if not electives:
         electives = RegistrationTools.chosenElectivesForSessions(student, session)
 
-    mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation in [1,3], electives))[0]
-    wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [1,3], electives))[0]
-    thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [1,3], electives))[0]
-    fri_r1 = list(filter(lambda e: e.day == "Friday" and e.rotation in [1,3], electives))[0]
-    mon_r2 = list(filter(lambda e: e.day == "Monday" and e.rotation in [2,3], electives))[0]
-    wed_r2 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [2,3], electives))[0]
-    thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [2,3], electives))[0]
-    fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation in [2,3], electives))[0]
+    studentSchedule = dict(mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation in [1,3], electives))[0],
+                           wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [1,3], electives))[0],
+                           thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [1,3], electives))[0],
+                           fri_r1 = list(filter(lambda e: e.day == "Friday" and e.rotation in [1,3], electives))[0],
+                           mon_r2 = list(filter(lambda e: e.day == "Monday" and e.rotation in [2,3], electives))[0],
+                           wed_r2 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [2,3], electives))[0],
+                           thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [2,3], electives))[0],
+                           fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation in [2,3], electives))[0])
 
-    return render_template('schedule.html', student=student, session=session,
-                                            mon_r1=mon_r1, wed_r1=wed_r1, thu_r1=thu_r1, fri_r1=fri_r1, 
-                                            mon_r2=mon_r2, wed_r2=wed_r2, thu_r2=thu_r2, fri_r2=fri_r2 
-                                            )
+    return render_template('schedule.html', student=student, session=session, studentSchedule=studentSchedule)
 
 # @app.route("/t")
 # @app.route("/t/<varName>")
@@ -680,6 +704,8 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+#     print(app.jinja_env)
+#     print(app.jinja_env.get_template('schedule.html'))
 #     s = select(Student.name.label("student_name"), SessionElective.day, SessionElective.rotation, Elective.name) \
 #                        .select_from(Student) \
 #                        .join(Schedule).where(Schedule.studentID == Student.id) \

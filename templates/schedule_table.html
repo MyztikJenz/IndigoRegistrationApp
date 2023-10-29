@@ -1,0 +1,61 @@
+<div>
+    <table class="table">
+        <thead class="table_header_row">
+            <tr>
+                <td class="table_row">{{ session_title }}</td>
+                <td class="table_row">Monday</td>
+                <td class="table_row">Wednesday</td>
+                <td class="table_row">Thursday</td>
+                <td class="table_row">Friday</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="vertical-align: top;">Rotation 1</td>
+                <td>
+                    {{ previous_session.mon_r1.elective.name }}<br>
+                    {{ previous_session.mon_r1.elective.room }}<br>
+                    {{ previous_session.mon_r1.elective.lead }}
+                </td>
+                <td>
+                    {{ previous_session.wed_r1.elective.name }}<br>
+                    {{ previous_session.wed_r1.elective.room }}<br>
+                    {{ previous_session.wed_r1.elective.lead }}
+                </td>
+                <td>
+                    {{ previous_session.thu_r1.elective.name }}<br>
+                    {{ previous_session.thu_r1.elective.room }}<br>
+                    {{ previous_session.thu_r1.elective.lead }}
+                </td>
+                <td>
+                    {{ previous_session.fri_r1.elective.name }}<br>
+                    {{ previous_session.fri_r1.elective.room }}<br>
+                    {{ previous_session.fri_r1.elective.lead }}
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top;">Rotation 2</td>
+                <td>
+                    {{ previous_session.mon_r2.elective.name }}<br>
+                    {{ previous_session.mon_r2.elective.room }}<br>
+                    {{ previous_session.mon_r2.elective.lead }}
+                </td>
+                <td>
+                    {{ previous_session.wed_r2.elective.name }}<br>
+                    {{ previous_session.wed_r2.elective.room }}<br>
+                    {{ previous_session.wed_r2.elective.lead }}
+                </td>
+                <td>
+                    {{ previous_session.thu_r2.elective.name }}<br>
+                    {{ previous_session.thu_r2.elective.room }}<br>
+                    {{ previous_session.thu_r2.elective.lead }}
+                </td>
+                <td>
+                    {{ previous_session.fri_r2.elective.name }}<br>
+                    {{ previous_session.fri_r2.elective.room }}<br>
+                    {{ previous_session.fri_r2.elective.lead }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
