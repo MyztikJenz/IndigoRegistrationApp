@@ -290,26 +290,30 @@ def adminPage():
             w = csv.writer(fileBuffer, quoting=csv.QUOTE_ALL)
             w.writerow(["student", "rotation", "Monday", "Wednesday", "Thursday", "Friday"])
 
+            def _writeRow(studentName, rotation, v):
+                if all(value == "" for value in v.values()) == False:
+                    w.writerow([studentName, rotation, v["Monday"], v["Wednesday"], v["Thursday"], v["Friday"]])
+
             currentStudentName = None
-            r1 = dict(Monday="", Wednesday="", Thursday="", Friday="")
-            r2 = dict(Monday="", Wednesday="", Thursday="", Friday="")
+            r1 = r2 = r3 = dict()
             for r in records:
                 if currentStudentName != r.student_name:
                     if currentStudentName != None:
                         # Write out the student to the CSV
-                        if all(value == "" for value in r1.values()) == False:
-                            w.writerow([currentStudentName, "1", r1["Monday"], r1["Wednesday"], r1["Thursday"], r1["Friday"]])
-                        if all(value == "" for value in r2.values()) == False:
-                            w.writerow([currentStudentName, "2", r2["Monday"], r2["Wednesday"], r2["Thursday"], r2["Friday"]])
+                        _writeRow(currentStudentName, "1", r1)
+                        _writeRow(currentStudentName, "2", r2)
+                        _writeRow(currentStudentName, "3", r3)
                     currentStudentName = r.student_name
                     r1 = dict(Monday="", Wednesday="", Thursday="", Friday="")
                     r2 = dict(Monday="", Wednesday="", Thursday="", Friday="")
+                    r3 = dict(Monday="", Wednesday="", Thursday="", Friday="")
                 
-                if r.rotation in [1,3]:
+                if r.rotation == 1:
                     r1[r.day] = r.elective_name
-
-                if r.rotation in [2,3]:
+                elif r.rotation == 2:
                     r2[r.day] = r.elective_name
+                elif r.rotation == 3:
+                    r3[r.day] = r.elective_name
 
             return Response(fileBuffer.getvalue(), mimetype="text/csv", headers={"Content-Disposition":f"attachment;filename=Session #{sessionNumber} two-session electives input.csv"})
 

@@ -420,8 +420,7 @@ class ConfigUtils():
                 if electiveName:
                     subq = select(SessionElective).select_from(Elective).where(Elective.name.startswith(electiveName)).join(SessionElective)\
                                                                         .where(SessionElective.electiveID == Elective.id)\
-                                                                        .where(or_(SessionElective.rotation == int(row["rotation"]),\
-                                                                                   SessionElective.rotation == 3))\
+                                                                        .where(SessionElective.rotation == int(row["rotation"]))\
                                                                         .where(SessionElective.day == day)\
                                                                         .join(Session).where(SessionElective.session == session)
 
