@@ -24,8 +24,9 @@ from database.configure import *
 # x "priority boarding" list
 # x generate input for AssignedClasses from session 1 two-part electives. Might be able to do this at session number update time.
 # x Show previous electives in signup form
-# Remove two-part electives as being options for new students from even-numbers sessions (still need them to be available)
-# sessionelectives need to update based on session, which means the form that gets uploaded needs some notion of session attachment
+# x Remove two-part electives as being options for new students from even-numbers sessions (still need them to be available)
+# x sessionelectives need to update based on session, which means the form that gets uploaded needs some notion of session attachment
+# Update elective details for session 2
 
 @app.route("/")
 def hello_world():
