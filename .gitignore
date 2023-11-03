@@ -3,3 +3,4 @@
 instance
 *.zip
 bin
+__pycache__
