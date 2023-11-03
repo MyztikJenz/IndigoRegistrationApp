@@ -94,6 +94,15 @@
             font: normal normal 14px/1.2 'Helvetica Neue', Arial, sans-serif;
 
         }
+
+        img {
+            float: left;
+            margin: 5px;
+            max-width: 200px;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+        }
     </style>
 
     <noscript>
@@ -387,18 +396,19 @@
     <div class="electiveDescriptions">
         <hr style="max-width:350px;margin-left:0px;">
         <h4>Elective Descriptions</h4>
-        Find out more about a particular elective.
+        Find out more about a particular elective. New electives are marked with ❇️
         <div style="margin-top: 8px;">
             <select id="classDesc2">
                 <option value="_instruction">Choose wisely...</option>
                 {% for dict in electiveDescriptions %}
-                    <option value="{{ dict.k }}">{{ dict.v }}</option>
+                    <option value="{{ dict.k }}">{{ "❇️" if dict.new }} {{ dict.v }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="description2" id="description2"></div>
         <noscript>Elective Descriptions do not work without javacscript.</noscript>
     </div>
+    <br clear="all">
 
     <div class="previous_sessions">
         <hr style="max-width:350px;margin-left:0px;">

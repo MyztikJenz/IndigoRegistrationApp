@@ -44,10 +44,6 @@
         "v": "The Science and Art of Light"
     },
     {
-        "k": "class21",
-        "v": "Conflict Resolution Team"
-    },
-    {
         "k": "class17",
         "v": "Volleyball"
     },
@@ -84,10 +80,6 @@
         "v": "Football"
     },
     {
-        "k": "class24",
-        "v": "Doing Good Together & Social Emotional Learning"
-    },
-    {
         "k": "class5",
         "v": "Dungeons and Dragons"
     },
@@ -121,6 +113,27 @@
     },
     {
         "k": "class32",
-        "v": "K/1st Enrichment Assistant"
+        "v": "K/1st Enrichment Assistant",
+        "new": "true"
+    },
+    {
+        "k": "class33",
+        "v": "Make a Snack Board!",
+        "new": "true"
+    },
+    {
+        "k": "class34",
+        "v": "Bookmaking & Scrapbooking",
+        "new": "true"
+    },
+    {
+        "k": "class35",
+        "v": "Yearbook",
+        "new": "true"
+    },
+    {
+        "k": "class36",
+        "v": "On the Bright Side",
+        "new": "true"
     }
 ]

@@ -29,7 +29,7 @@ logging.basicConfig(level=logging.DEBUG)
 runningSystemAsTest = False
 
 # Template folder location is relative to the file that creates the app (which is this file)
-application = app = Flask(__name__, template_folder="../templates")
+application = app = Flask(__name__, template_folder="../templates", static_folder="../images")
 app.config["SECRET_KEY"] = "***REMOVED***"
 
 # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
