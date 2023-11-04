@@ -436,22 +436,19 @@ class ConfigUtils():
         return('ok', f"Performed {countOfAssignments} assignments.")
         
     @classmethod
-    def assignPriorityEnrollment(cls, data=None, sessionNumber=None):
+    def assignPriorityEnrollment(cls, data=None):
         if not data:
             return('error', "No data found")
-        if not sessionNumber:
-            return('error', "Session number is required")
         
         # Deletes all existing records
         stmt = delete(PriorityEnrolling)
         db.session.execute(stmt)
         db.session.commit()
 
-        session = db.session.scalars(select(Session).where(Session.number == sessionNumber)).first()
         countOfAssignments = 0
         r = csv.DictReader(data)
         for row in r:
-            # Find the student and the elective they need to take.
+            # Find the student record
             sel = select(Student).where(Student.name == row["student"])
             student = db.session.execute(sel).scalar_one_or_none()
             if not student:
@@ -463,7 +460,7 @@ class ConfigUtils():
             countOfAssignments += 1
 
         db.session.commit()
-        return('ok', f"Performed {countOfAssignments} assignments.")
+        return('ok', f"Added {countOfAssignments} students to the priority enrollment table.")
 
     # @classmethod
     # def old_uploadSpecificAssignments(cls, data=None, sessionNumber=None):

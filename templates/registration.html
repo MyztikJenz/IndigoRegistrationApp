@@ -162,7 +162,7 @@
 
                 sameDaysWarning = ""
                 days = ["monday", "wednesday", "thursday", "friday"]
-                multirotationOKClasses = ["PE", "Studio Art", "2D Art", "3D Art"]
+                multirotationOKClasses = ["🏈 PE"]
                 days.forEach(function(day) {
                     s1 = "#"+day+"_rotation_1"
                     s2 = "#"+day+"_rotation_2"
@@ -170,11 +170,18 @@
                     s1_txt = $("option:selected", s1).text().trim().replace(/\s*\(\d+ left\)/, "")
                     s2_txt = $("option:selected", s2).text().trim().replace(/\s*\(\d+ left\)/, "")
 
-                    if (!multirotationOKClasses.includes(s1_txt) && s1_txt == s2_txt) {
-                        if (sameDaysWarning.length == 0) {
-                            sameDaysWarning = "You have the same elective picked for both rotations on the following days:\n\n"
+                    // Don't carp on multi-rotation classes
+                    kls = $("option:selected", s1).attr('class')
+                    if (kls && kls == "r3_elective") {
+                        return // jQuery's version of continue
+                    }
+                    else {
+                        if (!multirotationOKClasses.includes(s1_txt) && s1_txt == s2_txt) {
+                            if (sameDaysWarning.length == 0) {
+                                sameDaysWarning = "You have the same elective picked for both rotations on the following days:\n\n"
+                            }
+                            sameDaysWarning += "\t" + day.charAt(0).toUpperCase() + day.slice(1) + "\n"
                         }
-                        sameDaysWarning += "\t" + day.charAt(0).toUpperCase() + day.slice(1) + "\n"
                     }
                 });
                 if (sameDaysWarning.length > 0) {

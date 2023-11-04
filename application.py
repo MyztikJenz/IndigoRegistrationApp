@@ -26,7 +26,7 @@ from database.configure import *
 # x Show previous electives in signup form
 # x Remove two-part electives as being options for new students from even-numbers sessions (still need them to be available)
 # x sessionelectives need to update based on session, which means the form that gets uploaded needs some notion of session attachment
-# Update elective details for session 2
+# x Update elective details for session 2
 
 @app.route("/")
 def hello_world():
@@ -95,13 +95,13 @@ def registrationPage(accessID=None):
 
         # If the form errors on a class being full and the student doesn't change it, it will be resubmitted as empty and not be part
         # of the request.form contents. We are always expecting 8, so anything less is a problem.
-        if len(request.form.keys) < 8:
+        if len(request.form.keys()) < 8:
             # Find which ones are missing
             missing = []
             for day in ["monday", "wednesday", "thursday", "friday"]:
                 for rotation in [1, 2]:
                     key = f"{day}_rotation_{rotation}"
-                    if key not in request.form.keys:
+                    if key not in request.form.keys():
                         missing.append(key)
             desc = ""
             for miss in missing:
@@ -144,7 +144,7 @@ def registrationPage(accessID=None):
                 app.logger.error(f"[{accessID}] {msg}")
 
             if len(studentElectivesIDs) != 8:
-                msg = f"Critical application error! Unexpected count of elective IDs {studentElectivesIDs}. (this is not an error you can fix)"
+                msg = f"Critical application error! Unexpected count of elective IDs <pre>{studentElectivesIDs}</pre>. (this is not an error you can fix)"
                 errors.append(msg)
                 app.logger.error(f"[{accessID}] {msg}")
                 app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
@@ -155,8 +155,11 @@ def registrationPage(accessID=None):
         else:
             # There are no errors! We can submit their schedule and show them the good news.
             studentElectives = list(filter(lambda e: e.id in studentElectivesIDs, electives))
-            if len(studentElectives) != 8:
-                msg = f"Critical application error! Unexpected count of student electives {studentElectives}. (this is not an error you can fix)"
+            
+            # We could have less than 8 electives chosen as rotation=3 electives will only be counted once (we will never have more than 8 though)
+            R3_electives_taken = len(list(filter(lambda x: x in studentElectivesIDs, R3_electiveIDs)))
+            if len(studentElectives) != (8 - R3_electives_taken):
+                msg = f"Critical application error! Unexpected count (expected {8 - R3_electives_taken} found {len(studentElectives)}) of student electives <pre>{studentElectives}</pre>. (this is not an error you can fix)"
                 errors.append(msg)
                 app.logger.error(f"[{accessID}] {msg}")
                 app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
@@ -565,8 +568,7 @@ def adminPage():
                 return redirect(request.url)
             
             priorities = map(lambda x: str(x, 'utf-8'), priorities)
-            sessionNumber = request.form["sessionNumber"]
-            (code, result) = ConfigUtils.assignPriorityEnrollment(priorities, sessionNumber)
+            (code, result) = ConfigUtils.assignPriorityEnrollment(priorities)
             flash(result, code)
             return redirect(request.url)
 
