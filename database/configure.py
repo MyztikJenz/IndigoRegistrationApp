@@ -57,7 +57,8 @@ else:
 # else:
 #     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finaldeploytest2.sqlite"
 
-db = SQLAlchemy(app)
+#db = SQLAlchemy(app)
+db = SQLAlchemy(app, engine_options={'pool_recycle' : 280})
 
 class Base(DeclarativeBase):
     pass
