@@ -227,8 +227,9 @@ def registrationPage(accessID=None):
     (thu_r1, thu_r2, thu_r3) = _availableElectives("Thursday", electives, all_mandatory_electives, currentSession)
     (fri_r1, fri_r2, fri_r3) = _availableElectives("Friday", electives, all_mandatory_electives, currentSession)
 
+    classJSONPath = os.path.join(os.path.dirname(app.instance_path), "electives/classes.json")
     electiveDescriptions = ""
-    with open("electives/classes.json", 'r', encoding='utf-8') as f:
+    with open(classJSONPath, 'r', encoding='utf-8') as f:
         electiveDescriptions = json.load(f)
     electiveDescriptions = sorted(electiveDescriptions, key=lambda d: d['v'])
 
