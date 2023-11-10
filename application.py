@@ -64,6 +64,7 @@ def registrationPage(accessID=None):
             isAllowToRegister = True
 
     if not isAllowToRegister:
+        app.logger.info(f"[{accessID}] denying access, not allowed to register yet")
         return render_template("notyet.html", teacher=student.teacher)
 
     # A list of electives for the current session
@@ -370,7 +371,7 @@ def adminPage():
         elif request.form["formID"] == "elective_schedules":
             currentSession = RegistrationTools.activeSession()
 
-            includeSeatCount = True if request.form["includeSeatsRemaining"] == "on" else False
+            includeSeatCount = True if "includeSeatsRemaining" in request.form and request.form["includeSeatsRemaining"] == "on" else False
 
             allR1 = [["Rotation 1"]]
             allR2 = [["Rotation 2"]]
