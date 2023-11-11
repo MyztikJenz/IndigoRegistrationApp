@@ -320,6 +320,11 @@ def adminPage():
                 elif r.rotation == 3:
                     r3[r.day] = r.elective_name
 
+            # Write out the last student we found (sorry Willa)
+            _writeRow(currentStudentName, "1", r1)
+            _writeRow(currentStudentName, "2", r2)
+            _writeRow(currentStudentName, "3", r3)
+
             return Response(fileBuffer.getvalue(), mimetype="text/csv", headers={"Content-Disposition":f"attachment;filename=Session #{sessionNumber} two-session electives input.csv"})
 
         elif request.form["formID"] == "start_session":
