@@ -131,9 +131,9 @@
                         optGroup = null;
                         $.each(enrolled, function(idx) {
                             se = enrolled[idx]
-                            if (optGroup == null || optGroup.label != se["day"]) {
+                            if (optGroup == null || optGroup.label != se["day"] + ' R' + se["rotation"]) {
                                 optGroup = document.createElement('optgroup')
-                                optGroup.label = se["day"]
+                                optGroup.label = se["day"] + ' R' + se["rotation"]
                                 $('#removeFromElective').get(0).options.add(optGroup)
                             }
                             $('#removeFromElective').get(0).options.add(new Option(text=se["name"] + " ("+ se["seats_left"] +" left)", value=se["id"]))
