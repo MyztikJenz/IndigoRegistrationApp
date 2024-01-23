@@ -21,12 +21,7 @@ from database.configure import *
 # testing
 # Need a /x/demo account
 # Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
-# x "priority boarding" list
-# x generate input for AssignedClasses from session 1 two-part electives. Might be able to do this at session number update time.
-# x Show previous electives in signup form
-# x Remove two-part electives as being options for new students from even-numbers sessions (still need them to be available)
-# x sessionelectives need to update based on session, which means the form that gets uploaded needs some notion of session attachment
-# x Update elective details for session 2
+# Option to prevent classes from being taken in back-to-back rotations (not sessions)
 
 @app.route("/")
 def hello_world():

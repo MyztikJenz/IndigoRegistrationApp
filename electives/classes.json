@@ -16,16 +16,12 @@
         "v": "Hand Embroidery"
     },
     {
-        "k": "class27",
-        "v": "Art and Mindfulness"
-    },
-    {
         "k": "class31",
         "v": "Crochet"
     },
     {
         "k": "class6",
-        "v": "Creator Economy"
+        "v": "YouTube Stars"
     },
     {
         "k": "class16",
@@ -42,10 +38,6 @@
     {
         "k": "class17",
         "v": "Volleyball"
-    },
-    {
-        "k": "class14",
-        "v": "Event Planning and Leadership (with Snacks ;)"
     },
     {
         "k": "class18",
@@ -84,10 +76,6 @@
         "v": "Basketball"
     },
     {
-        "k": "class28",
-        "v": "2D Art"
-    },
-    {
         "k": "class9",
         "v": "Speech and Debate"
     },
@@ -109,27 +97,34 @@
     },
     {
         "k": "class32",
-        "v": "K/1st Enrichment Assistant",
-        "new": "true"
-    },
-    {
-        "k": "class33",
-        "v": "Make a Snack Board!",
-        "new": "true"
-    },
-    {
-        "k": "class34",
-        "v": "Bookmaking & Scrapbooking",
-        "new": "true"
+        "v": "K/1st Enrichment Assistant"
     },
     {
         "k": "class35",
-        "v": "Yearbook: Bigger and Better",
-        "new": "true"
+        "v": "Yearbook: Bigger and Better"
     },
     {
         "k": "class36",
-        "v": "On the Bright Side",
+        "v": "On the Bright Side"
+    },
+    {
+        "k": "class37",
+        "v": "Sewing",
+        "new": "true"
+    },
+    {
+        "k": "class38",
+        "v": "Art as Service",
+        "new": "true"
+    },
+    {
+        "k": "class39",
+        "v": "3D Art",
+        "new": "true"
+    },
+    {
+        "k": "class40",
+        "v": "Anatomy Lab",
         "new": "true"
     }
 ]
