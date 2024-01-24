@@ -1,14 +1,172 @@
 <!DOCTYPE html>
+<meta id="accessID" data-id="{{ accessID }}">
 <head>
     <style>
         body {
             font: normal normal 14px/1.2 'Helvetica Neue', Arial, sans-serif;
         }
 
+        .instructions {
+            width:500px;
+            margin:25px;
+        }
+
+        .gameContainer {
+            display:flex;
+            justify-content: left;
+        }
+
+        .bigNumberGuess {
+            font-size: 96pt;
+            padding: 10px;
+            background-color: lightskyblue;
+            max-width: 192px;
+            width:192px;
+            text-align: center;
+            border-radius: 5px;
+            margin-right: 20px;
+        }
+
+        .bigNumberMatch {
+            font-size: 96pt;
+            padding: 10px;
+            background-color: lightgray;
+            max-width: 192px;
+            width: 192px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .timer {
+            font-size: 96pt;
+            padding: 10px;
+            max-width: 192px;
+            width: 192px;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 96pt;
+            padding: 10px;
+            max-width: 192px;
+            width: 192px;
+            text-align: center;
+        }
+
+        .elementContainer {
+            text-align: center;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
     </style>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script id="rendered-js">
+        var gameRunning = false;
+        var timeRemaining = 6000.0; // in ms
+        var numberToGuess = null;
+        var score = 0;
+        var gameTimer = null;
+        var guessTimer = null;
+        $(document).ready(function() {
+            $(window).keypress(function (e) {
+                if (e.keyCode >=48 && e.keyCode <= 57) {
+                    numPressed = e.keyCode - 48
+                    if (gameTimer) {
+                        if (numPressed == numberToGuess) {
+                            score += 1;
+                            $("#score").html(score);
+                            clearInterval(gameTimer);
+                            gameTimer = null;
+                            guessTimer = setInterval(showGuess, 1000 * randomInteger(2,10));
+                        }
+                        else {
+                            timeRemaining -= 500;
+                        }
+                    }
+                }
+            });
+
+            $("#timer").html((timeRemaining / 1000.0).toFixed(1))
+            $("#score").html(score);
+        });
+
+        $(function() {
+            $('#bigNumberGuess').click(function() {
+                if (!gameRunning) {
+                    gameRunning=true;
+                    guessTimer = setInterval(showGuess, 1000);
+                }
+            });
+        });
+
+        function showGuess() {
+            numberToGuess = randomInteger(0, 9)
+            $('#bigNumberMatch').html(numberToGuess);
+            clearInterval(guessTimer);
+            gameTimer = setInterval(countdown, 100);
+        }
+
+        function countdown() {
+            timeRemaining -= 100;
+            $("#timer").html((timeRemaining / 1000.0).toFixed(1))
+            if (timeRemaining.toFixed(1) <= 0.0) {
+                var accessID = $('#accessID').data("id");
+                if (!accessID.startsWith("{")) {
+                    $.getJSON("/_json_/log", {"accessID": accessID, "msg": "Played the waiting game, scored " + score}, function(data) {})
+                }
+                alert("Game Over! You got a score of " + score + ".\n\nReload the page to play again.");
+                clearInterval(gameTimer);
+                clearInterval(guessTimer);
+                gameTimer = null;
+                guessTimer = null;
+            }
+        }
+
+        function randomInteger(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min
+        }
+    </script>
 </head>
 <body>
     Hi there... you are a little early. We aren't taking folks from {{ teacher }}'s class yet.
+    <p>
+    <div class="instructions">
+        ...buuuut, instead of constantly reloading this page. Shall we play a game? 
+        <p>
+        This one is easy. When you are ready, click on the blue box. A number will appear in the grey box and you need to type that 
+        number in as fast as you can. You only get 6 seconds to type in as many numbers as you can. Numbers appear at random
+        times. And a wrong number will take away .5 seconds off your clock.
+        <p>
+        So, be on your toes. And good luck, my best score is 7.
+        <p>
+        Mr. Jim
+    </div>
+
+    <div class="gameContainer">
+        <div class="bigNumberGuess" id="bigNumberGuess">
+             
+        </div>
+
+        <div class="bigNumberMatch" id="bigNumberMatch">
+             
+        </div>
+
+        <div class="elementContainer">
+            Time remaining
+            <div class="timer" id="timer">
+                0.0
+            </div>
+        </div>
+
+        <div class="elementContainer">
+            Score
+            <div class="score" id="score">
+                0
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 

@@ -60,7 +60,7 @@ def registrationPage(accessID=None):
 
     if not isAllowToRegister:
         app.logger.info(f"[{accessID}] denying access, not allowed to register yet")
-        return render_template("notyet.html", teacher=student.teacher)
+        return render_template("notyet.html", teacher=student.teacher, accessID=accessID)
 
     # A list of electives for the current session
     subq = select(SessionElective).where(SessionElective.session == currentSession)
@@ -648,6 +648,13 @@ def generateJSON(task=None):
             sreParts.append({'id':sre.id, 'day':sre.day, 'rotation':sre.rotation, 'name':sre.elective.name, 'seats_left':enrollmentCounts[sre.id]["remaining"]})
 
         return jsonify({"enrolled":seParts, "available":sreParts})
+
+    elif task == "log":
+        app.logger.error("logging...")
+        accessID = request.args.get("accessID")
+        msg = request.args.get("msg")
+        app.logger.info(f"[{accessID}] {msg}")
+        return jsonify()
 
     else:
         app.logger.error(f"json generator received unknown request: {task}")
