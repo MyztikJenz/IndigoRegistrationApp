@@ -22,6 +22,10 @@ from database.configure import *
 # Need a /x/demo account
 # Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
 # Option to prevent classes from being taken in back-to-back rotations (not sessions)
+# When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
+# Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
+#   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
+# Should we limit PE? To what? and how?
 
 @app.route("/")
 def hello_world():
@@ -237,6 +241,10 @@ def registrationPage(accessID=None):
             previousSession = db.session.execute(q).scalar_one_or_none()
             previousElectives = RegistrationTools.chosenElectivesForSessions(student, previousSession)
 
+            # If a student is added late in the year, they won't have any previousElectives and the indexing here will blow up.
+            if len(previousElectives) == 0:
+                return dict()
+            
             previous = dict(mon_r1 = list(filter(lambda e: e.day == "Monday" and e.rotation in [1,3], previousElectives))[0],
                             wed_r1 = list(filter(lambda e: e.day == "Wednesday" and e.rotation in [1,3], previousElectives))[0],
                             thu_r1 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [1,3], previousElectives))[0],
@@ -650,7 +658,6 @@ def generateJSON(task=None):
         return jsonify({"enrolled":seParts, "available":sreParts})
 
     elif task == "log":
-        app.logger.error("logging...")
         accessID = request.args.get("accessID")
         msg = request.args.get("msg")
         app.logger.info(f"[{accessID}] {msg}")
