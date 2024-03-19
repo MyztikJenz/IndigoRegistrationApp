@@ -26,6 +26,9 @@ from database.configure import *
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
 # Should we limit PE? To what? and how?
+# The creation of the elective descriptions is not done in the database, and there was a request to add the schedule to each class. (this is genClassDescriptions.py)
+#   I think I could have an upload of the json file that fills out a new key, schedule, and downloads it. 
+#   Or we could have an active endpoint that the script calls out to, which seems pretty silly.
 
 @app.route("/")
 def hello_world():
@@ -261,7 +264,7 @@ def registrationPage(accessID=None):
             session2 = _findPreviousSchedule(2)
         if currentSession.number >= 4:
             session3 = _findPreviousSchedule(3)
-    
+
     return render_template('registration.html', student=student, currentEnrollment=currentEnrollment, session=currentSession,
                                                 previousForm=previousForm, errors=errors,
                                                 mon_r1_electives=mon_r1, mon_r2_electives=mon_r2,

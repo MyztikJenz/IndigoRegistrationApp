@@ -88,10 +88,6 @@
         "v": "Baking/Desserts"
     },
     {
-        "k": "class4",
-        "v": "Creative Writing"
-    },
-    {
         "k": "class25",
         "v": "US History through Music: 1960s-1990s"
     },
@@ -109,22 +105,25 @@
     },
     {
         "k": "class37",
-        "v": "Sewing",
-        "new": "true"
+        "v": "Sewing"
     },
     {
         "k": "class38",
-        "v": "Art as Service",
-        "new": "true"
+        "v": "Art as Service"
     },
     {
         "k": "class39",
-        "v": "3D Art",
-        "new": "true"
+        "v": "3D Art"
     },
     {
         "k": "class40",
         "v": "Anatomy Lab",
         "new": "true"
+    },
+    {
+        "k": "class41",
+        "v": "Creative Writing: Student Newsletter Edition",
+        "new": "true"
     }
+
 ]
