@@ -1,129 +1,159 @@
 [
     {
         "k": "class7",
-        "v": "Chess"
+        "v": "Chess",
+        "schedule": "(Friday, R2 1:50-2:35)"
     },
     {
         "k": "class30",
-        "v": "Studio Art"
+        "v": "Studio Art",
+        "schedule": "(Thursday, both rotations 1:05-2:35)"
     },
     {
         "k": "class26",
-        "v": "Grilling"
+        "v": "Grilling",
+        "schedule": "(Friday, R1 1:05-1:50)"
     },
     {
         "k": "class10",
-        "v": "Hand Embroidery"
+        "v": "Hand Embroidery",
+        "schedule": "(Monday, R2 1:50-2:35)"
     },
     {
         "k": "class31",
-        "v": "Crochet"
+        "v": "Crochet",
+        "schedule": "(Monday, R1 1:05-1:50)"
     },
     {
         "k": "class6",
-        "v": "YouTube Stars"
+        "v": "YouTube Stars",
+        "schedule": "(Monday, R2 1:50-2:35)"
     },
     {
         "k": "class16",
-        "v": "Innovative Design: Bringing Ideas to Life"
+        "v": "Innovative Design: Bringing Ideas to Life",
+        "schedule": "(Friday, R2 1:50-2:35)"
     },
     {
         "k": "class1",
-        "v": "Create Art using Generative AI"
+        "v": "Create Art using Generative AI",
+        "schedule": "(Monday, R2 1:50-2:35)"
     },
     {
         "k": "class20",
-        "v": "The Science and Art of Light"
+        "v": "The Science and Art of Light",
+        "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class17",
-        "v": "Volleyball"
+        "v": "Volleyball",
+        "schedule": "(Friday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class18",
-        "v": "Intro to Vietnamese Cooking"
+        "v": "Intro to Vietnamese Cooking",
+        "schedule": "(Friday, R1 1:05-1:50)"
     },
     {
         "k": "class22",
-        "v": "Kickball and Newcomb"
+        "v": "Kickball and Newcomb",
+        "schedule": "(Friday, R2 1:50-2:35)"
     },
     {
         "k": "class3",
-        "v": "It\u2019s Game Time!"
+        "v": "It\u2019s Game Time!",
+        "schedule": "(Monday, R1 1:05-1:50)"
     },
     {
         "k": "class2",
-        "v": "Not Your Grandparents\u2019 Lemonade Stand"
+        "v": "Not Your Grandparents\u2019 Lemonade Stand",
+        "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class23",
-        "v": "Essential Life Skills"
+        "v": "Essential Life Skills",
+        "schedule": "(Wednesday, R1 1:05-1:50)"
     },
     {
         "k": "class19",
-        "v": "Quick Meal Cooking"
+        "v": "Quick Meal Cooking",
+        "schedule": "(Wednesday, R1 1:05-1:50)"
     },
     {
         "k": "class15",
-        "v": "Football"
+        "v": "Football",
+        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class5",
-        "v": "Dungeons and Dragons"
+        "v": "Dungeons and Dragons",
+        "schedule": "(Monday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class12",
-        "v": "Basketball"
+        "v": "Basketball",
+        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class9",
-        "v": "Speech and Debate"
+        "v": "Speech and Debate",
+        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class8",
-        "v": "Woodworking: Wood Candy Dispenser"
+        "v": "Woodworking: Wood Candy Dispenser",
+        "schedule": "(Wednesday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class13",
-        "v": "Baking/Desserts"
+        "v": "Baking/Desserts",
+        "schedule": "(Thursday, both rotations 1:05-2:35)"
     },
     {
         "k": "class25",
-        "v": "US History through Music: 1960s-1990s"
+        "v": "US History through Music: 1960s-1990s",
+        "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class32",
-        "v": "K/1st Enrichment Assistant"
+        "v": "K/1st Enrichment Assistant",
+        "schedule": "(Monday, R1 1:05-1:50)"
     },
     {
         "k": "class35",
-        "v": "Yearbook: Bigger and Better"
+        "v": "Yearbook: Bigger and Better",
+        "schedule": "(Friday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class36",
-        "v": "On the Bright Side"
+        "v": "On the Bright Side",
+        "schedule": "(Monday, R2 1:50-2:35)"
     },
     {
         "k": "class37",
-        "v": "Sewing"
+        "v": "Sewing",
+        "schedule": "(Thursday, R1 1:05-1:50)"
     },
     {
         "k": "class38",
-        "v": "Art as Service"
+        "v": "Art as Service",
+        "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class39",
-        "v": "3D Art"
+        "v": "3D Art",
+        "schedule": "(Friday, both rotations 1:05-2:35)"
     },
     {
         "k": "class40",
         "v": "Anatomy Lab",
-        "new": "true"
+        "new": "true",
+        "schedule": "(Monday, R1 1:05-1:50)"
     },
     {
         "k": "class41",
         "v": "Creative Writing: Student Newsletter Edition",
-        "new": "true"
+        "new": "true",
+        "schedule": "(Wednesday, R1 1:05-1:50)"
     }
-
 ]

@@ -375,6 +375,16 @@
         </p>
         <hr style="max-width:350px;margin-left:0px;">
         <p>
+            <strong>Modify `classes.json`:</strong><p>
+                Upload the classes.json doc to update it with the current session's schedule details.
+            <form method=post enctype=multipart/form-data action="/_admin_">
+                <input type = "hidden" name="formID" value="modify_classes_json">
+                <input type=file name="classes_dot_json">
+                <button class="submitButton" type="submit">Upload and modify</button>
+            </form>
+        </p>
+        <hr style="max-width:350px;margin-left:0px;">
+        <p>
             <strong>Modify Assignments:</strong><p>
                 Allows you to move students around as needed. Does not take into account occupancy, so you can overload a class if you'd like.
             <form method=post enctype=multipart/form-data action="/_admin_">

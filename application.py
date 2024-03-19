@@ -26,9 +26,6 @@ from database.configure import *
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
 # Should we limit PE? To what? and how?
-# The creation of the elective descriptions is not done in the database, and there was a request to add the schedule to each class. (this is genClassDescriptions.py)
-#   I think I could have an upload of the json file that fills out a new key, schedule, and downloads it. 
-#   Or we could have an active endpoint that the script calls out to, which seems pretty silly.
 
 @app.route("/")
 def hello_world():
@@ -585,6 +582,44 @@ def adminPage():
             flash(result, code)
             return redirect(request.url)
 
+        if request.form["formID"] == "modify_classes_json":
+            if 'classes_dot_json' not in request.files:
+                flash("No classes.json file found", 'error')
+                return redirect(request.url)
+
+            classes_dot_json = request.files['classes_dot_json']
+            if classes_dot_json.filename == '':
+                flash("No selected file", 'error')
+                return redirect(request.url)
+
+            classes = json.load(classes_dot_json)
+            updatedClasses = []
+            for kls in classes:
+                className = kls['v']
+                currentSession = RegistrationTools.activeSession()
+                subq = select(SessionElective)\
+                                            .join(Elective).where(SessionElective.electiveID == Elective.id)\
+                                                            .where(Elective.name == className)\
+                                            .join(Session).where(SessionElective.session == currentSession).order_by(SessionElective.rotation)
+                electives = db.session.scalars(subq).fetchall()
+                desc = "("
+                for count,e in enumerate(electives):
+                    if e.rotation == 3:
+                        desc += f"{e.day}, both rotations 1:05-2:35"
+                    else:
+                        preamble = f"{e.day}," if count == 0 else " and"
+                        desc += f"{preamble} R{e.rotation}"
+                        if e.rotation == 1:
+                            desc += " 1:05-1:50"
+                        else:
+                            desc += " 1:50-2:35"
+                desc += ")"
+                kls['schedule'] = desc
+                updatedClasses.append(kls)
+            
+            jsonBuffer = io.StringIO(json.dumps(updatedClasses, indent=4))
+            return Response(jsonBuffer.getvalue(), mimetype="application/json", headers={"Content-Disposition":f"attachment;filename=classes.json"})
+
         else:
             flash("Unknown formID", 'error')
             return redirect(request.url)
@@ -708,6 +743,16 @@ def showSchedule(student, session=None, electives=None):
 #     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
 
 # with app.app_context():
+#     currentSession = RegistrationTools.activeSession()
+#     subq = select(SessionElective)\
+#                                 .join(Elective).where(SessionElective.electiveID == Elective.id)\
+#                                                 .where(Elective.name == "K/1st Enrichment Assistant")\
+#                                 .join(Session).where(SessionElective.session == currentSession).order_by(SessionElective.rotation)
+#     chessElective = db.session.scalars(subq).fetchall()
+#     pdb.set_trace()
+#     print("what")
+
+
 #     print(app.jinja_env)
 #     print(app.jinja_env.get_template('schedule.html'))
 #     s = select(Student.name.label("student_name"), SessionElective.day, SessionElective.rotation, Elective.name) \
@@ -729,7 +774,6 @@ def showSchedule(student, session=None, electives=None):
     # pdb.set_trace()
     # setattr(sessionRecord, x.name, 0)
     # db.session.commit()
-#     currentSession = RegistrationTools.activeSession()
 
 #     allR1 = [["Rotation 1"]]
 #     allR2 = [["Rotation 2"]]
