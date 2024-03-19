@@ -403,6 +403,12 @@ class ConfigUtils():
         if not sessionNumber:
             return('error', "Session number is required")
         
+        # Deletes all existing records
+        stmt = delete(AssignedClasses)
+        db.session.execute(stmt)
+        db.session.commit()
+
+
         session = db.session.scalars(select(Session).where(Session.number == sessionNumber)).first()
         countOfAssignments = 0
         r = csv.DictReader(data)
