@@ -13,6 +13,9 @@ import csv
 from itertools import zip_longest
 import io
 import zipfile
+import uwsgidecorators
+import uwsgi
+import time
 
 from database.configure import *
 
@@ -72,11 +75,8 @@ def registrationPage(accessID=None):
 
     isEnrolledForSession = RegistrationTools.studentEnrolledForSession(student, currentSession)
     if isEnrolledForSession:
-        app.logger.info(f"[{accessID}] already registered, showing schedule")
+        app.logger.info(f"{_uwsgideets()} [{accessID}] already registered, showing schedule")
         return showSchedule(student, currentSession)
-
-    # the count of seats already occupied
-    currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)
 
     previousForm = {}
     errors = []
@@ -84,14 +84,13 @@ def registrationPage(accessID=None):
         # Did they select enough PE?
         PE_electives = list(filter(lambda e: e.elective.consideredPE, electives))
         PE_electiveIDs = list(map(lambda e: e.id, PE_electives))
-        PE_count = 0
 
         # Did rotation=3 electives stay together (rotation1 and rotation2 need to match)
         R3_electives = list(filter(lambda e: e.rotation == 3, electives))
         R3_electiveIDs = list(map(lambda e: e.id, R3_electives))
 
         studentElectivesIDs = []
-        app.logger.debug(f"[{accessID}] request.form: {request.form}")
+        app.logger.debug(f"{_uwsgideets()} [{accessID}] request.form: {request.form}")
 
         # If the form errors on a class being full and the student doesn't change it, it will be resubmitted as empty and not be part
         # of the request.form contents. We are always expecting 8, so anything less is a problem.
@@ -112,70 +111,91 @@ def registrationPage(accessID=None):
 
             msg = f"You attempted to reselect a full elective on {desc}. This isn't valid and those entries have been reset. Please choose again."
             errors.append(msg)
-            app.logger.error(f"[{accessID}] {msg}")
+            app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
         else:
-            for key in request.form:
-                esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
-                studentElectivesIDs.append(esID)
+            # The web server runs multiple copies of the web app simultaneously. We need to lock this critical section so that no two (or more) processes
+            # can simultaneously get currentEnrollment numbers independently of writing to the database while those enrollment numbers are considered correct.
+            # Important Note: uwsgidecorators.lock does not play nicely with Flask's early returns of functions that show UI to the user.
+            #                 It will continue execution from the caller regardless of what Flask did.
+            @uwsgidecorators.lock
+            def _runEnrollmentAttempt():
+                PE_count = 0
+                currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)  # the count of seats already occupied (the reason we're under the lock)
 
-                if esID in PE_electiveIDs:
-                    PE_count += 1
+                for key in request.form:
+                    esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
+                    studentElectivesIDs.append(esID)
 
-                if esID in R3_electiveIDs:
-                    partnerKey = key.replace("1","2") # Assume our id ends in 1
-                    if key[-1] == "2":
-                        partnerKey = key.replace("2", "1")
-                    if request.form[key] != request.form[partnerKey]:
-                        brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
-                        msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                    if esID in PE_electiveIDs:
+                        PE_count += 1
+
+                    if esID in R3_electiveIDs:
+                        partnerKey = key.replace("1","2") # Assume our id ends in 1
+                        if key[-1] == "2":
+                            partnerKey = key.replace("2", "1")
+                        if request.form[key] != request.form[partnerKey]:
+                            brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
+                            msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                            errors.append(msg)
+                            app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+
+                    # Did a class fill up between the form being loaded and submitted?
+                    if currentEnrollment[esID]["remaining"] <= 0:
+                        fullElective = list(filter(lambda e: e.id == esID, electives))[0]
+                        msg = f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective."
                         errors.append(msg)
-                        app.logger.error(f"[{accessID}] {msg}")
+                        app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
 
-                # Did a class fill up between the form being loaded and submitted?
-                if currentEnrollment[esID]["remaining"] == 0:
-                    fullElective = list(filter(lambda e: e.id == esID, electives))[0]
-                    msg = f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective."
+                if PE_count < 3:
+                    msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
                     errors.append(msg)
-                    app.logger.error(f"[{accessID}] {msg}")
+                    app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
 
-            if PE_count < 3:
-                msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
-                errors.append(msg)
-                app.logger.error(f"[{accessID}] {msg}")
+                if len(studentElectivesIDs) != 8:
+                    msg = f"Critical application error! Unexpected count of elective IDs <pre>{studentElectivesIDs}</pre>. (this is not an error you can fix)"
+                    errors.append(msg)
+                    app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+                    app.logger.error(f"{_uwsgideets()} [{accessID}] studentElectivesIDs: {studentElectivesIDs}")
 
-            if len(studentElectivesIDs) != 8:
-                msg = f"Critical application error! Unexpected count of elective IDs <pre>{studentElectivesIDs}</pre>. (this is not an error you can fix)"
-                errors.append(msg)
-                app.logger.error(f"[{accessID}] {msg}")
-                app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
+                if len(errors) > 0:
+                    return("nope", "nope", []) # must return something
+                else:
+                    # There are no errors! We can submit their schedule and show them the good news.
+                    studentElectives = list(filter(lambda e: e.id in studentElectivesIDs, electives))
+                    
+                    # We could have less than 8 electives chosen as rotation=3 electives will only be counted once (we will never have more than 8 though)
+                    R3_electives_taken = len(list(filter(lambda x: x in studentElectivesIDs, R3_electiveIDs)))
+                    if len(studentElectives) != (8 - R3_electives_taken):
+                        msg = f"Critical application error! Unexpected count (expected {8 - R3_electives_taken} found {len(studentElectives)}) of student electives <pre>{studentElectives}</pre>. (this is not an error you can fix)"
+                        errors.append(msg)
+                        app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+                        app.logger.error(f"{_uwsgideets()} [{accessID}] studentElectivesIDs: {studentElectivesIDs}")
+                        foundNames = list(map(lambda se: f"se.id: {se.id} name: {se.elective.name}", studentElectives))
+                        app.logger.error(f"{_uwsgideets()} [{accessID}] studentElectives found: {foundNames}")
+                        return("nope", "nope", []) # just return something
+                    else:
+                        (code, result) = RegistrationTools.registerStudent(student, studentElectives)
+                        return (code, result, studentElectives)
 
-#        errors.append("This is a test error")
-        if len(errors) > 0:
-            previousForm = request.form
-        else:
-            # There are no errors! We can submit their schedule and show them the good news.
-            studentElectives = list(filter(lambda e: e.id in studentElectivesIDs, electives))
-            
-            # We could have less than 8 electives chosen as rotation=3 electives will only be counted once (we will never have more than 8 though)
-            R3_electives_taken = len(list(filter(lambda x: x in studentElectivesIDs, R3_electiveIDs)))
-            if len(studentElectives) != (8 - R3_electives_taken):
-                msg = f"Critical application error! Unexpected count (expected {8 - R3_electives_taken} found {len(studentElectives)}) of student electives <pre>{studentElectives}</pre>. (this is not an error you can fix)"
-                errors.append(msg)
-                app.logger.error(f"[{accessID}] {msg}")
-                app.logger.error(f"[{accessID}] studentElectivesIDs: {studentElectivesIDs}")
-                foundNames = list(map(lambda se: f"se.id: {se.id} name: {se.elective.name}", studentElectives))
-                app.logger.error(f"[{accessID}] studentElectives found: {foundNames}")
+            # Attempt to enroll
+            (code, result, studentElectives) = _runEnrollmentAttempt()
+
+            if len(errors) > 0:
                 previousForm = request.form
             else:
-                (code, result) = RegistrationTools.registerStudent(student, studentElectives)
-
                 if (code == "ok"):
                     return showSchedule(student, currentSession, studentElectives)
                 else:
                     # Something has gone pretty wrong at this point. Database has failed to accept the addition.
-                    err = f"[{accessID}] Failed to save results: {result}"
+                    err = f"{_uwsgideets()} [{accessID}] Failed to save results: {result}"
                     app.logger.error(err)
                     return err
+
+        # END else: attempting to register
+
+        # Errors gathered from POST requests not attempting to register
+        if len(errors) > 0:
+            previousForm = request.form
 
     # END if request.method == "POST":
 
@@ -261,6 +281,11 @@ def registrationPage(accessID=None):
             session2 = _findPreviousSchedule(2)
         if currentSession.number >= 4:
             session3 = _findPreviousSchedule(3)
+
+    # Always re-query for currentEnrollment if the attempt to register above failed.
+    # This is also how we get currentEnrollment for GET requests. 
+    # Calling this as late as possible to ensure the most up-to-date info in the form
+    currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)
 
     return render_template('registration.html', student=student, currentEnrollment=currentEnrollment, session=currentSession,
                                                 previousForm=previousForm, errors=errors,
@@ -724,6 +749,56 @@ def showSchedule(student, session=None, electives=None):
                            fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation in [2,3], electives))[0])
 
     return render_template('schedule.html', student=student, session=session, studentSchedule=studentSchedule)
+
+# This is a test route to verify that critical section locking works as expected. You can call this
+# many times concurrently and pass different values, each value will have the function wait for that 
+# many seconds. For a two-process setup (which is the default on PythonAnywhere) you should see two
+# of your requests get serviced right away while additional ones wait for one of those to finish. 
+# And the ones in flight should not print "yo... sup?" until they are done.
+# You'll need to be looking at the server log files to see the output of the print() statement.
+# A good command line test is:
+# URL="http://127.0.0.1:5000/test_locks"; curl ${URL}/10 & curl ${URL}/2 & curl ${URL}/5 &
+@app.route("/test_locks/<passedWaitTime>")
+def test_locks(passedWaitTime=None):
+    print(f"{_uwsgideets()} passedWaitTime called with {passedWaitTime}")
+
+    @uwsgidecorators.lock
+    def _callTheFunc(waitFor):
+        print(f"{_uwsgideets()} _callTheFunc called")
+        time.sleep(waitFor)
+        return f"<p>Yo... sup? waited for: {waitFor} </p>\n"
+
+    return _callTheFunc(int(passedWaitTime))
+
+# A good set of command lines for this set of tests:
+#  curl http://127.0.0.1:5000/set_test
+#  for x in `seq 1 10`; do curl http://127.0.0.1:5000/run_test & done
+@app.route("/set_test")
+def set_test():
+    with open("./test.txt", 'w', encoding='utf-8') as f:
+        f.write("1")
+    return "test reset to 1\n"
+
+@app.route("/run_test")
+def run_test():
+    
+    @uwsgidecorators.lock
+    def _internalFunc():
+        with open("./test.txt", 'r', encoding='utf-8') as f:
+            value = f.read()
+        
+        newValue = int(value) + 1
+        print(f"{_uwsgideets()} old value: {value} newValue: {newValue}")
+        
+        with open("./test.txt", 'w', encoding='utf-8') as f:
+            f.write(str(newValue))
+
+    _internalFunc()
+    return "ok"
+
+def _uwsgideets():
+    # returns Worker and Request IDs for the uwsgi process that's executing the app
+    return f"[wkr/req {uwsgi.worker_id()}/{uwsgi.request_id()}]"
 
 # @app.route("/t")
 # @app.route("/t/<varName>")
