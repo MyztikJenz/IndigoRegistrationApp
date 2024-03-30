@@ -405,6 +405,12 @@ def adminPage():
             currentSession = RegistrationTools.activeSession()
 
             includeSeatCount = True if "includeSeatsRemaining" in request.form and request.form["includeSeatsRemaining"] == "on" else False
+            includeAssignOnly = True if "includeAssignOnly" in request.form and request.form["includeAssignOnly"] == "on" else False
+
+            # We want the option to both find and exclude the "assign only" classes (usually RSP, but there's been others)
+            # Default to not showing assign only unless the form indicates we should. Having two False in the array is fine.
+            assignOnlyOptions = [False]
+            assignOnlyOptions.append(includeAssignOnly)
 
             allR1 = [["Rotation 1"]]
             allR2 = [["Rotation 2"]]
@@ -413,7 +419,7 @@ def adminPage():
                 r1 = []
                 r2 = []
                 subq = select(SessionElective).join(Elective).where(SessionElective.electiveID == Elective.id)\
-                                                                                            .where(Elective.assignOnly == False)\
+                                                                                            .where(Elective.assignOnly.in_(assignOnlyOptions))\
                                                                                             .where(SessionElective.day == day)\
                                                                                 .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
                 sessionElectives = db.session.scalars(subq).fetchall()
