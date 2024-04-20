@@ -24,11 +24,16 @@ from database.configure import *
 # testing
 # Need a /x/demo account
 # Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
+#   This is how to avoid reloading the page on the a class with zero seats available when the form reloads. Feels like we can have "choose one" options that are the defaults
 # Option to prevent classes from being taken in back-to-back rotations (not sessions)
 # When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
 # Should we limit PE? To what? and how?
+#   this was a significant problem in Session 4. It does need to be limited, gut feeling is to 5 given the makeup of the offerings we had in 2023-24
+# Editing a student's schedule is a pain right now, needs to be better
+#   And available to teachers (if they are so inclined)
+#   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
 
 @app.route("/")
 def hello_world():
