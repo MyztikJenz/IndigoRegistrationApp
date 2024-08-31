@@ -301,7 +301,8 @@ class ConfigUtils():
             startDate = datetime.datetime.strptime(row["startDate"], date_format)
             endDate = datetime.datetime.strptime(row["endDate"], date_format)
             db.session.add(Session(number=int(row["sessionNumber"]), startDate=startDate, endDate=endDate, active=(row["active"]=="TRUE"),
-                                   Ruiz=(row["Ruiz"]=="TRUE"),Paolini=(row["Paolini"]=="TRUE"),Bishop=(row["Bishop"]=="TRUE")))
+                                   Ruiz=(row["Ruiz"]=="TRUE"),Paolini=(row["Paolini"]=="TRUE"),Bishop=(row["Bishop"]=="TRUE"),
+                                   Priority=row["Priority"]=="TRUE"))
 
         db.session.commit()
             
@@ -468,6 +469,21 @@ class ConfigUtils():
 
         db.session.commit()
         return('ok', f"Added {countOfAssignments} students to the priority enrollment table.")
+    
+    @classmethod
+    def resetDatabase(cls):
+        # Yeah... be careful with this method. Also, order here matters (I think).
+        db.session.execute(delete(PriorityEnrolling))
+        db.session.execute(delete(AssignedClasses))
+        db.session.execute(delete(Schedule))
+        db.session.execute(delete(SessionElective))
+        db.session.execute(delete(Student))
+        db.session.execute(delete(Elective))
+        db.session.execute(delete(Session))
+
+        db.session.commit()
+
+        return('ok', "All database values dropped")
 
     # @classmethod
     # def old_uploadSpecificAssignments(cls, data=None, sessionNumber=None):

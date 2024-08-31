@@ -62,6 +62,13 @@
             }
         }
 
+        .destructiveButton {
+            background: linear-gradient(#f87474,#fc2b2b);
+            &:active {
+                background: linear-gradient(#f87474,#fc2b2b);
+            }
+        }
+
         .sessions_table {
             border-collapse: collapse;
         }
@@ -177,6 +184,13 @@
                     }
                 });
             });
+        });
+
+        $(function() {
+            $('#resetDatabaseForm').on('submit', function() {
+                shouldReset = window.confirm("You are about to reset the database. This is not undo-able. Click 'Cancel' to abort. Click 'OK' to continue with erasure.")
+                return shouldReset
+            })
         });
 
     </script>
@@ -441,6 +455,23 @@
                 </table>
             </form>
         </p>
+    </div>
+</div>
+
+<div><hr style="width:100% !important; max-width: none !important;"></div>
+<div class="container">
+    <div class="left_side">
+        <strong>Warning!</strong><p>
+            This will erase and reset the entire database. There are no options to pass in, and it'll only confirm once. Don't do this except at the beginning of the year.
+            <p>
+            <form id="resetDatabaseForm" method=post enctype=multipart/form-data action="/_admin_">
+                <input type="hidden" name="formID" value="reset_database">
+                <button class="submitButton destructiveButton" type="submit">Reset Database</button>
+            </form>
+
+    </div>
+    <div class = "right_side">
+        &nbsp;
     </div>
 </div>
 </body>

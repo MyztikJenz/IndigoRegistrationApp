@@ -26,6 +26,7 @@ from database.configure import *
 # Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
 #   This is how to avoid reloading the page on the a class with zero seats available when the form reloads. Feels like we can have "choose one" options that are the defaults
 # Option to prevent classes from being taken in back-to-back rotations (not sessions)
+#   But not PE
 # When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
@@ -34,6 +35,12 @@ from database.configure import *
 # Editing a student's schedule is a pain right now, needs to be better
 #   And available to teachers (if they are so inclined)
 #   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
+# Enable option to allow studends to enroll by grade level
+# Make sure that Lizabeth's somewhat odd setup (two session, but not both rotations) is working
+#
+# DONE
+# Reset from last year - clear out the database
+
 
 @app.route("/")
 def hello_world():
@@ -618,7 +625,7 @@ def adminPage():
             flash(result, code)
             return redirect(request.url)
 
-        if request.form["formID"] == "modify_classes_json":
+        elif request.form["formID"] == "modify_classes_json":
             if 'classes_dot_json' not in request.files:
                 flash("No classes.json file found", 'error')
                 return redirect(request.url)
@@ -655,6 +662,11 @@ def adminPage():
             
             jsonBuffer = io.StringIO(json.dumps(updatedClasses, indent=4))
             return Response(jsonBuffer.getvalue(), mimetype="application/json", headers={"Content-Disposition":f"attachment;filename=classes.json"})
+
+        elif request.form["formID"] == "reset_database":
+            (code, result) = ConfigUtils.resetDatabase()
+            flash(result, code)
+            return redirect(request.url)
 
         else:
             flash("Unknown formID", 'error')
