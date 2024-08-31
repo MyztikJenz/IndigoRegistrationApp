@@ -160,6 +160,12 @@
                     return false
                 }
 
+                if (PE_electives_chosen.length > 5) {
+                    $('#errorList').append('<li>You can have at most 5 PE electives, you currently have ' + PE_electives_chosen.length + '. Choose different non-PE electives.</li>')
+                    $('#status').show();
+                    return false
+                }
+
                 sameDaysWarning = ""
                 days = ["monday", "wednesday", "thursday", "friday"]
                 multirotationOKClasses = ["🏈 PE"]

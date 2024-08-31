@@ -30,8 +30,6 @@ from database.configure import *
 # When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
-# Should we limit PE? To what? and how?
-#   this was a significant problem in Session 4. It does need to be limited, gut feeling is to 5 given the makeup of the offerings we had in 2023-24
 # Editing a student's schedule is a pain right now, needs to be better
 #   And available to teachers (if they are so inclined)
 #   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
@@ -40,6 +38,8 @@ from database.configure import *
 # DONE
 # Reset from last year - clear out the database
 # Enable option to allow studends to enroll by grade level
+# Should we limit PE? To what? and how?
+#   this was a significant problem in Session 4. It does need to be limited, gut feeling is to 5 given the makeup of the offerings we had in 2023-24
 
 
 @app.route("/")
@@ -167,6 +167,10 @@ def registrationPage(accessID=None):
 
                 if PE_count < 3:
                     msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
+                    errors.append(msg)
+                    app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+                elif PE_count > 5: 
+                    msg = f"You can have at most 5 PE electives, you currently have {PE_count}. Choose different non-PE electives."
                     errors.append(msg)
                     app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
 
