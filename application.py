@@ -35,11 +35,11 @@ from database.configure import *
 # Editing a student's schedule is a pain right now, needs to be better
 #   And available to teachers (if they are so inclined)
 #   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
-# Enable option to allow studends to enroll by grade level
 # Make sure that Lizabeth's somewhat odd setup (two session, but not both rotations) is working
 #
 # DONE
 # Reset from last year - clear out the database
+# Enable option to allow studends to enroll by grade level
 
 
 @app.route("/")
@@ -67,7 +67,14 @@ def registrationPage(accessID=None):
     # See if this student is allowed to connect. `teacher` is the column name in the DB we key from
     teacherColumn = getattr(Session, student.teacher)
     subq = select(teacherColumn).select_from(Session).where(Session.active == True)
-    isAllowToRegister = db.session.scalar(subq)
+    isAllowToRegisterByTeacher = db.session.scalar(subq)
+
+    gradeColumnName = "sixthGrade" if student.grade == 6 else "seventhGrade" if student.grade == 7 else "eigthGrade"
+    gradeColumn = getattr(Session, gradeColumnName)
+    subq = select(gradeColumn).select_from(Session).where(Session.active == True)
+    isAllowToRegisterByGrade = db.session.scalar(subq)
+
+    isAllowToRegister = isAllowToRegisterByTeacher or isAllowToRegisterByGrade
 
     if not isAllowToRegister and currentSession.Priority == 1:
         # Maybe they are on the priority list
@@ -79,7 +86,7 @@ def registrationPage(accessID=None):
 
     if not isAllowToRegister:
         app.logger.info(f"[{accessID}] denying access, not allowed to register yet")
-        return render_template("notyet.html", teacher=student.teacher, accessID=accessID)
+        return render_template("notyet.html", teacher=student.teacher, grade=student.grade, accessID=accessID)
 
     # A list of electives for the current session
     subq = select(SessionElective).where(SessionElective.session == currentSession)
@@ -374,7 +381,7 @@ def adminPage():
             if currentSession.number != sessionNumber:
                 currentSession = RegistrationTools.setActiveSession(sessionNumber)
 
-            columns = ["Bishop", "Ruiz", "Paolini", "Priority"]
+            columns = ["Bishop", "Ruiz", "Paolini", "sixthGrade", "seventhGrade", "eigthGrade", "Priority"]
             for sessionNum in range(1,5):
                 active = request.form.getlist(f"session_{sessionNum}_active")
                 sessionRecord = db.session.execute(select(Session).where(Session.number == sessionNum)).scalar_one_or_none()
@@ -671,7 +678,7 @@ def adminPage():
         else:
             flash("Unknown formID", 'error')
             return redirect(request.url)
-    else:
+    else: ## request.method == "GET"
         studentCount = db.session.query(func.count(Student.id)).scalar()
         students = db.session.scalars(select(Student).order_by(Student.name)).fetchall()
         sessions = db.session.scalars(select(Session)).fetchall()

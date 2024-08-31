@@ -82,6 +82,9 @@ class Session(Base):
     Ruiz: Mapped[bool]
     Paolini: Mapped[bool]
     Bishop: Mapped[bool]
+    sixthGrade: Mapped[bool]
+    seventhGrade: Mapped[bool]
+    eigthGrade: Mapped[bool]
     Priority: Mapped[bool]
     electives: Mapped[List["SessionElective"]] = relationship(back_populates="session")
 

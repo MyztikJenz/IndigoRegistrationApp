@@ -224,7 +224,7 @@
                                 <option name="{{ session.number }}" {{ "selected" if session.active }}>{{ session.number }}</option>
                             {% endfor %}
                         </select>
-                    </td>    
+                    </td>
                 </tr>
                 <tr>
                     <td style="vertical-align: top;" colspan="2">
@@ -232,9 +232,12 @@
                             <thead>
                                 <td>Session</td>
                                 <td>Priority</td>
-                                <td>Bishop/Vong</td>
+                                <td>Bishop</td>
                                 <td>Ruiz</td>
                                 <td>Paolini</td>
+                                <td>6th</td>
+                                <td>7th</td>
+                                <td>8th</td>
                             </thead>
                             <tbody>
                                 {% for session in sessions %}
@@ -244,6 +247,9 @@
                                         <td><input type="checkbox" name="session_{{ session.number }}_active" value="Bishop" {{ "checked" if session.Bishop}}></td>
                                         <td><input type="checkbox" name="session_{{ session.number }}_active" value="Ruiz" {{ "checked" if session.Ruiz}}></td>
                                         <td><input type="checkbox" name="session_{{ session.number }}_active" value="Paolini" {{ "checked" if session.Paolini}}></td>
+                                        <td><input type="checkbox" name="session_{{ session.number }}_active" value="sixthGrade" {{ "checked" if session.sixthGrade}}></td>
+                                        <td><input type="checkbox" name="session_{{ session.number }}_active" value="seventhGrade" {{ "checked" if session.seventhGrade}}></td>
+                                        <td><input type="checkbox" name="session_{{ session.number }}_active" value="eigthGrade" {{ "checked" if session.eigthGrade}}></td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
