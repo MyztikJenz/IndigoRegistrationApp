@@ -27,7 +27,6 @@ from database.configure import *
 #   This is how to avoid reloading the page on the a class with zero seats available when the form reloads. Feels like we can have "choose one" options that are the defaults
 # Option to prevent classes from being taken in back-to-back rotations (not sessions)
 #   But not PE
-# When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
 # Editing a student's schedule is a pain right now, needs to be better
@@ -40,6 +39,7 @@ from database.configure import *
 # Enable option to allow studends to enroll by grade level
 # Should we limit PE? To what? and how?
 #   this was a significant problem in Session 4. It does need to be limited, gut feeling is to 5 given the makeup of the offerings we had in 2023-24
+# When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
 
 
 @app.route("/")

@@ -132,13 +132,18 @@
                 }
                 kls = $("option:selected", this).attr('class')
                 if (kls && kls == "r3_elective") {
+                    // If the student selected a double-rotation elective with this choice, switch the other elective to match
                     tgtValue = $(this).val()
                     $('#'+ partnerID +' option[value="'+tgtValue+'"]').prop('selected', true)
+                    alertChangeInValue($('#'+partnerID).parent().closest('td'))
                 }
                 else {
                     other_kls = $("option:selected", '#'+partnerID).attr('class')
                     if (other_kls && other_kls == "r3_elective") {
+                        // if the student selected something that was a double-rotation and now has picked something else, 
+                        // choose the first item in the partner list.
                         $('#'+ partnerID +' option:first').prop('selected', true)
+                        alertChangeInValue($('#'+partnerID).parent().closest('td'))
                     }
                 }
             });
@@ -210,6 +215,30 @@
                 }
             });
         });
+
+        // Blink tgtElement's background-color for a bit of time to get someone's attention.
+        let alertChangeIntervalID;
+        function alertChangeInValue(tgtElement) {
+            if (!alertChangeIntervalID) {
+                alertChangeIntervalID = setInterval(
+                    function() {
+                        rgb = tgtElement.css('background-color').match(/\d+/g).map(Number);
+                        if (rgb[0] == 0 || rgb[2] == 255) { // If the current color is 'default' (which is rgba(0,0,0,0) or rgb(255,255,255)), switch to red
+                            tgtElement.css('background-color', 'red')
+                        }
+                        else {
+                            tgtElement.css('background-color', 'white')
+                        }
+                    }, 100
+                )
+
+                setTimeout(() => {
+                    clearInterval(alertChangeIntervalID);
+                    alertChangeIntervalID = null;
+                    tgtElement.css('background-color', 'white')
+                }, 1500)
+            }
+        }
 
         </script>
 </head>
