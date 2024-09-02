@@ -340,7 +340,7 @@ class ConfigUtils():
         if not sessionNumber:
             return('error', "Session number is required")
         
-        session = db.session.scalars(select(Session).where(Session.id == sessionNumber)).first()
+        session = db.session.scalars(select(Session).where(Session.number == sessionNumber)).first()
 
         r = csv.DictReader(data)
         for row in r:
