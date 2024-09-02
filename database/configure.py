@@ -305,6 +305,7 @@ class ConfigUtils():
             endDate = datetime.datetime.strptime(row["endDate"], date_format)
             db.session.add(Session(number=int(row["sessionNumber"]), startDate=startDate, endDate=endDate, active=(row["active"]=="TRUE"),
                                    Ruiz=(row["Ruiz"]=="TRUE"),Paolini=(row["Paolini"]=="TRUE"),Bishop=(row["Bishop"]=="TRUE"),
+                                   sixthGrade=(row["sixthGrade"]=="TRUE"),seventhGrade=(row["seventhGrade"]=="TRUE"),eigthGrade=(row["eigthGrade"]=="TRUE"),
                                    Priority=row["Priority"]=="TRUE"))
 
         db.session.commit()

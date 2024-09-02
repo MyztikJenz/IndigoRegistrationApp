@@ -32,7 +32,6 @@ from database.configure import *
 # Editing a student's schedule is a pain right now, needs to be better
 #   And available to teachers (if they are so inclined)
 #   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
-# Make sure that Lizabeth's somewhat odd setup (two session, but not both rotations) is working
 #
 # DONE
 # Reset from last year - clear out the database
