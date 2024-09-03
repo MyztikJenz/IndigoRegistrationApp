@@ -1,159 +1,137 @@
 [
     {
         "k": "class7",
-        "v": "Chess",
-        "schedule": "(Friday, R2 1:50-2:35)"
-    },
-    {
-        "k": "class30",
-        "v": "Studio Art",
-        "schedule": "(Thursday, both rotations 1:05-2:35)"
-    },
-    {
-        "k": "class26",
-        "v": "Grilling",
-        "schedule": "(Friday, R1 1:05-1:50)"
-    },
-    {
-        "k": "class10",
-        "v": "Hand Embroidery",
+        "v": "Study Hall",
         "schedule": "(Monday, R2 1:50-2:35)"
     },
     {
-        "k": "class31",
-        "v": "Crochet",
+        "k": "class26",
+        "v": "Small Eats & Sweet Treats",
+        "schedule": "(Thursday, R1 1:05-1:50)"
+    },
+    {
+        "k": "class10",
+        "v": "Badminton Basics",
+        "schedule": "(Wednesday, R1 1:05-1:50 and R2 1:50-2:35)"
+    },
+    {
+        "k": "class11",
+        "v": "Yearbook Class",
+        "schedule": "(Monday, R1 1:05-1:50)"
+    },
+    {
+        "k": "class27",
+        "v": "Anatomy Lab",
         "schedule": "(Monday, R1 1:05-1:50)"
     },
     {
         "k": "class6",
-        "v": "YouTube Stars",
-        "schedule": "(Monday, R2 1:50-2:35)"
+        "v": "Nail Art",
+        "schedule": "(Thursday, R1 1:05-1:50)"
     },
     {
         "k": "class16",
-        "v": "Innovative Design: Bringing Ideas to Life",
-        "schedule": "(Friday, R2 1:50-2:35)"
+        "v": "Dungeons & Dragons",
+        "schedule": "(Friday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class1",
-        "v": "Create Art using Generative AI",
-        "schedule": "(Monday, R2 1:50-2:35)"
+        "v": "Uke can do it!",
+        "schedule": "(Monday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class20",
-        "v": "The Science and Art of Light",
-        "schedule": "(Wednesday, R2 1:50-2:35)"
+        "v": "Learn Russian",
+        "schedule": "(Friday, R1 1:05-1:50)"
+    },
+    {
+        "k": "class21",
+        "v": "Go Find Your Spark...",
+        "schedule": "(Thursday, R2 1:50-2:35)"
     },
     {
         "k": "class17",
-        "v": "Volleyball",
+        "v": "The GSA: Gender and Sexualities Alliance",
+        "schedule": "(Monday, R2 1:50-2:35)"
+    },
+    {
+        "k": "class14",
+        "v": "Flag Football",
         "schedule": "(Friday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class18",
-        "v": "Intro to Vietnamese Cooking",
-        "schedule": "(Friday, R1 1:05-1:50)"
+        "v": "Student Newsletter: Planning",
+        "schedule": "(Wednesday, R1 1:05-1:50)"
     },
     {
         "k": "class22",
-        "v": "Kickball and Newcomb",
-        "schedule": "(Friday, R2 1:50-2:35)"
+        "v": "Art as Mindfulness",
+        "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class3",
-        "v": "It\u2019s Game Time!",
-        "schedule": "(Monday, R1 1:05-1:50)"
+        "v": "Game and Grub",
+        "schedule": "(Friday, R2 1:50-2:35)"
     },
     {
         "k": "class2",
-        "v": "Not Your Grandparents\u2019 Lemonade Stand",
-        "schedule": "(Wednesday, R2 1:50-2:35)"
+        "v": "Slime Boss: Your Guide to Running a Business",
+        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
         "k": "class23",
-        "v": "Essential Life Skills",
-        "schedule": "(Wednesday, R1 1:05-1:50)"
-    },
-    {
-        "k": "class19",
-        "v": "Quick Meal Cooking",
-        "schedule": "(Wednesday, R1 1:05-1:50)"
-    },
-    {
-        "k": "class15",
-        "v": "Football",
-        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
-    },
-    {
-        "k": "class5",
-        "v": "Dungeons and Dragons",
-        "schedule": "(Monday, R1 1:05-1:50 and R2 1:50-2:35)"
-    },
-    {
-        "k": "class12",
-        "v": "Basketball",
-        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
-    },
-    {
-        "k": "class9",
-        "v": "Speech and Debate",
-        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
-    },
-    {
-        "k": "class8",
-        "v": "Woodworking: Wood Candy Dispenser",
-        "schedule": "(Wednesday, R1 1:05-1:50 and R2 1:50-2:35)"
-    },
-    {
-        "k": "class13",
-        "v": "Baking/Desserts",
+        "v": "Studio Art",
         "schedule": "(Thursday, both rotations 1:05-2:35)"
     },
     {
-        "k": "class25",
-        "v": "US History through Music: 1960s-1990s",
+        "k": "class19",
+        "v": "Student Newsletter: Writing",
         "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
-        "k": "class32",
-        "v": "K/1st Enrichment Assistant",
-        "schedule": "(Monday, R1 1:05-1:50)"
+        "k": "class15",
+        "v": "Creative Sign Art!",
+        "schedule": "(Monday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
-        "k": "class35",
-        "v": "Yearbook: Bigger and Better",
-        "schedule": "(Friday, R1 1:05-1:50 and R2 1:50-2:35)"
+        "k": "class24",
+        "v": "2D Art",
+        "schedule": "(Friday, R2 1:50-2:35)"
     },
     {
-        "k": "class36",
-        "v": "On the Bright Side",
+        "k": "class5",
+        "v": "Contest Math",
         "schedule": "(Monday, R2 1:50-2:35)"
     },
     {
-        "k": "class37",
-        "v": "Sewing",
-        "schedule": "(Thursday, R1 1:05-1:50)"
+        "k": "class12",
+        "v": "Family Game Night",
+        "schedule": "(Wednesday, R1 1:05-1:50)"
     },
     {
-        "k": "class38",
-        "v": "Art as Service",
-        "schedule": "(Wednesday, R2 1:50-2:35)"
-    },
-    {
-        "k": "class39",
-        "v": "3D Art",
-        "schedule": "(Friday, both rotations 1:05-2:35)"
-    },
-    {
-        "k": "class40",
-        "v": "Anatomy Lab",
-        "new": "true",
+        "k": "class9",
+        "v": "Visual Storytelling: Comic Strip Memoirs",
         "schedule": "(Monday, R1 1:05-1:50)"
     },
     {
-        "k": "class41",
-        "v": "Creative Writing: Student Newsletter Edition",
-        "new": "true",
+        "k": "class8",
+        "v": "Bibliomaniacs",
+        "schedule": "(Friday, R1 1:05-1:50 and R2 1:50-2:35)"
+    },
+    {
+        "k": "class13",
+        "v": "Volleyball",
+        "schedule": "(Monday, R2 1:50-2:35)"
+    },
+    {
+        "k": "class4",
+        "v": "Microscope Lab",
+        "schedule": "(Wednesday, R1 1:05-1:50)"
+    },
+    {
+        "k": "class25",
+        "v": "Impress Everyone with these Easy Dinner Recipes!",
         "schedule": "(Wednesday, R1 1:05-1:50)"
     }
 ]
