@@ -171,8 +171,8 @@ def registrationPage(accessID=None):
                     msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
                     errors.append(msg)
                     app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
-                elif PE_count > 5: 
-                    msg = f"You can have at most 5 PE electives, you currently have {PE_count}. Choose different non-PE electives."
+                elif PE_count > 4: 
+                    msg = f"You can have at most 4 PE electives, you currently have {PE_count}. Choose different non-PE electives."
                     errors.append(msg)
                     app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
 
