@@ -22,7 +22,6 @@ from database.configure import *
 ### 
 ### What's left
 # testing
-# Need a /x/demo account
 # Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
 #   This is how to avoid reloading the page on the a class with zero seats available when the form reloads. Feels like we can have "choose one" options that are the defaults
 # Option to prevent classes from being taken in back-to-back rotations (not sessions)
@@ -39,6 +38,7 @@ from database.configure import *
 # Should we limit PE? To what? and how?
 #   this was a significant problem in Session 4. It does need to be limited, gut feeling is to 5 given the makeup of the offerings we had in 2023-24
 # When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
+# Need a /x/demo account
 
 
 @app.route("/")
@@ -52,12 +52,15 @@ def registrationPage(accessID=None):
     if not accessID:
         return "<p>" # show nothing if someone just happens to find this page and doesn't provide an accessID
 
-    sel = select(Student).where(Student.accessID == accessID)
-    r = db.session.execute(sel)
-    student = r.scalar_one_or_none()
-    if not student:
-        app.logger.error(f"no matching student found for accessID {accessID}")
-        return "<p>invalid access ID</p>", 401
+    if accessID == "studentdemo":
+        student = Student(name="Test Student", grade=6, teacher="Ruiz", accessID="studentdemo")
+    else:
+        sel = select(Student).where(Student.accessID == accessID)
+        r = db.session.execute(sel)
+        student = r.scalar_one_or_none()
+        if not student:
+            app.logger.error(f"no matching student found for accessID {accessID}")
+            return "<p>invalid access ID</p>", 401
     
     # Need...
     # The current session
@@ -73,7 +76,7 @@ def registrationPage(accessID=None):
     subq = select(gradeColumn).select_from(Session).where(Session.active == True)
     isAllowToRegisterByGrade = db.session.scalar(subq)
 
-    isAllowToRegister = isAllowToRegisterByTeacher or isAllowToRegisterByGrade
+    isAllowToRegister = isAllowToRegisterByTeacher or isAllowToRegisterByGrade or accessID == "studentdemo"
 
     if not isAllowToRegister and currentSession.Priority == 1:
         # Maybe they are on the priority list
@@ -196,7 +199,11 @@ def registrationPage(accessID=None):
                         app.logger.error(f"{_uwsgideets()} [{accessID}] studentElectives found: {foundNames}")
                         return("nope", "nope", []) # just return something
                     else:
-                        (code, result) = RegistrationTools.registerStudent(student, studentElectives)
+                        if accessID == "studentdemo":
+                            (code, result) = ('ok', 'Demo account registration, not real')
+                        else:
+                            (code, result) = RegistrationTools.registerStudent(student, studentElectives)
+
                         return (code, result, studentElectives)
 
             # Attempt to enroll
