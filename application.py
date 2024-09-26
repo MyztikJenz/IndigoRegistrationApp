@@ -24,13 +24,19 @@ from database.configure import *
 # testing
 # Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
 #   This is how to avoid reloading the page on the a class with zero seats available when the form reloads. Feels like we can have "choose one" options that are the defaults
-# Option to prevent classes from being taken in back-to-back rotations (not sessions)
-#   But not PE
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
+#
+# Very nice to have (it's a pain right now)
 # Editing a student's schedule is a pain right now, needs to be better
 #   And available to teachers (if they are so inclined)
 #   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
+#
+# Required before next session
+# Move service-related data into the environment
+#   see https://help.pythonanywhere.com/pages/environment-variables-for-web-apps/
+# Option to prevent classes from being taken in back-to-back rotations (not sessions)
+#   But not PE
 #
 # DONE
 # Reset from last year - clear out the database
