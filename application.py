@@ -31,12 +31,14 @@ from database.configure import *
 # Editing a student's schedule is a pain right now, needs to be better
 #   And available to teachers (if they are so inclined)
 #   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
+#       Needs to be separate, it's a back-door otherwise
 #
 # Required before next session
 # Move service-related data into the environment
 #   see https://help.pythonanywhere.com/pages/environment-variables-for-web-apps/
 # Option to prevent classes from being taken in back-to-back rotations (not sessions)
 #   But not PE
+# Schedule viewer (not just download)
 #
 # DONE
 # Reset from last year - clear out the database
@@ -846,25 +848,88 @@ def _uwsgideets():
     # returns Worker and Request IDs for the uwsgi process that's executing the app
     return f"[wkr/req {uwsgi.worker_id()}/{uwsgi.request_id()}]"
 
-# @app.route("/t")
-# @app.route("/t/<varName>")
-# def show_template(varName=None):
-#     dbError = None
-#     if varName:
-#         try:
-#             db.session.add(User(name=varName))
-#             db.session.commit()
-#         except IntegrityError as err:
-#             print(f"Crap... {err}")
-#             dbError = err
-#             db.session.rollback()
+# This builds a per-day (or all days, if you ask for it) schedule suitable for printing. You can also download CSVs of these.
+@app.route("/session_schedules/<targetDay>")
+@app.route("/session_schedules/<targetDay>/<passkey>")
+def session_schedules(targetDay="all", passkey=""):
+    currentSession = RegistrationTools.activeSession()
 
-#     rowCount = db.session.query(User).count()
+    # Some classes's enrollments are available only to teachers (RSP, Gender and Sexuality Alliance, etc) so this is the way we can allow
+    # teachers to see those schedules at the same time not showing them to other parents. The hex value below can be anything you want
+    # it's just the output of the following:
+    #       python3 -c 'import hashlib;print(hashlib.md5("thesecretkey".encode()).hexdigest())'
+    #         -or-
+    #       md5 -s "thesecretkey"
+    # where "thesecretkey" is what you want the teachers to be adding to the URL, e.g.,
+    #       https://***REMOVED***.pythonanywhere.com/session_schedules/thursday/thesecretkey
+    # 
+    # The database has a boolean field "hideFromSessionSchedules" which controls if the elective is viewable here or not. "assignOnly" is 
+    # not this field, that is for electives that should not be allowed to be generally selectable.
+    #
+    # Note: the passkey must be all lower-case. It can contain numbers, dashes, or underscores, but all lower-case letters.
+    passkeyIsCorrect = (hashlib.md5(passkey.encode()).hexdigest() == "5427040c313c735f56be5cfb833d89e6")
+    filterArgs = [0]
+    if passkeyIsCorrect:
+        filterArgs.append(1)
 
-#     return render_template('test.html', varName=varName, nameCount=rowCount, dbError=dbError)
+    days = ["Monday", "Wednesday", "Thursday", "Friday"]
+    if targetDay != "all":
+        titledTargetDay = str.title(targetDay)
+        if titledTargetDay in days:
+            days = [titledTargetDay]
+
+    dayContainers = {}
+    for day in days:
+        dayContainer = []
+        for rotation in [[1,3], [2,3]]:
+            container = []
+            electiveNames = []
+            electiveAttendees = []
+
+            subq = select(SessionElective).where(SessionElective.day == day).where(SessionElective.rotation.in_(rotation))\
+                                        .join(Elective).where(SessionElective.electiveID == Elective.id)\
+                                        .filter(Elective.hideFromSessionSchedules.in_(filterArgs))\
+                                        .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
+            sessionElectivesForDay = db.session.scalars(subq).fetchall()
+            for se in sessionElectivesForDay:
+                electiveNames.append(f"{se.elective.name}|{se.elective.room}|{se.elective.lead}")
+                subq = select(Student.name).select_from(Schedule).where(Schedule.sessionElectiveID == se.id)\
+                                                                 .join(Student).where(Schedule.studentID == Student.id).order_by(Student.name)
+                students = db.session.scalars(subq).fetchall()
+                electiveAttendees.append(students)
+
+            container.append([f"{day}|Rotation {rotation[0]}|" + ("1:05-1:50" if rotation[0] == 1 else "1:50-2:35")])
+            container.append(electiveNames)
+            zl = zip_longest(*electiveAttendees, fillvalue="")
+            for z in zl:
+                container.append(z)
+            dayContainer.append(container)
+        
+        dayContainers[day] = dayContainer
+
+    return render_template('assigned_schedules_view.html', sessionNumber=currentSession.number,
+                                                           monday=dayContainers["Monday"] if "Monday" in dayContainers else None, 
+                                                           wednesday=dayContainers["Wednesday"] if "Wednesday" in dayContainers else None,
+                                                           thursday=dayContainers["Thursday"] if "Thursday" in dayContainers else None,
+                                                           friday=dayContainers["Friday"] if "Friday" in dayContainers else None
+                                                           )
+
 
 # with app.app_context():
 #     currentSession = RegistrationTools.activeSession()
+
+#     day = "Monday"
+#     rotation = [1,3]
+#     filterArgs = [0]
+#     subq = select(SessionElective).where(SessionElective.day == day).where(SessionElective.rotation.in_(rotation))\
+#                                 .join(Elective).where(SessionElective.electiveID == Elective.id)\
+#                                 .filter(Elective.assignOnly.in_(filterArgs))\
+#                                 .join(Session).where(SessionElective.session == currentSession).order_by(Elective.name)
+#     sessionElectivesForDay = db.session.scalars(subq).fetchall()
+#     electiveNames = list(map(lambda se: se.elective.name, sessionElectivesForDay))
+#     print(electiveNames)
+#     pdb.set_trace()
+
 #     subq = select(SessionElective)\
 #                                 .join(Elective).where(SessionElective.electiveID == Elective.id)\
 #                                                 .where(Elective.name == "K/1st Enrichment Assistant")\

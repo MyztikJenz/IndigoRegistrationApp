@@ -40,7 +40,7 @@ app.config["SECRET_KEY"] = "***REMOVED***"
 # db_name     = os.environ["RDS_DB_NAME"]
 
 if "RUN_LOCALLY" in os.environ:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///Session1_testbed.sqlite"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///session1.sqlite.db"
 else:
     # PythonAnywhere
     db_username = "***REMOVED***"
@@ -98,6 +98,7 @@ class Elective(Base):
     room: Mapped[str] = mapped_column(String(128))
     consideredPE: Mapped[bool]
     assignOnly: Mapped[bool]
+    hideFromSessionSchedules: Mapped[bool]
 
 class SessionElective(Base):
     __tablename__ = "sessionelectives"
@@ -378,12 +379,17 @@ class ConfigUtils():
                     elective.assignOnly = (row["assignOnly"]=="TRUE")
                     shouldUpdate = True
 
+                if elective.hideFromSessionSchedules != (row["hideFromSessionSchedules"]=="TRUE"):
+                    elective.hideFromSessionSchedules = (row["hideFromSessionSchedules"]=="TRUE")
+                    shouldUpdate = True
+
                 if shouldUpdate:
                     db.session.commit()
             else:
                 # Create an entry into the electives table.
                 elective = Elective(name=row['name'], lead=row['lead'], maxAttendees=int(row['maxAttendees']), multisession=(row["multisession"]=="TRUE"), 
-                                    room=row["room"], consideredPE=(row["consideredPE"]=="TRUE"), assignOnly=(row["assignOnly"]=="TRUE"))
+                                    room=row["room"], consideredPE=(row["consideredPE"]=="TRUE"), assignOnly=(row["assignOnly"]=="TRUE"),
+                                    hideFromSessionSchedules=(row["hideFromSessionSchedules"]=="TRUE"))
                 db.session.add(elective)
                 db.session.commit()
 
