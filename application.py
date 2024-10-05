@@ -36,9 +36,6 @@ from database.configure import *
 # Required before next session
 # Move service-related data into the environment
 #   see https://help.pythonanywhere.com/pages/environment-variables-for-web-apps/
-# Option to prevent classes from being taken in back-to-back rotations (not sessions)
-#   But not PE
-# Schedule viewer (not just download)
 #
 # DONE
 # Reset from last year - clear out the database
@@ -47,6 +44,9 @@ from database.configure import *
 #   this was a significant problem in Session 4. It does need to be limited, gut feeling is to 5 given the makeup of the offerings we had in 2023-24
 # When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
 # Need a /x/demo account
+# Schedule viewer (not just download)
+# Option to prevent classes from being taken in back-to-back rotations (not sessions)
+#   But not PE
 
 
 @app.route("/")
@@ -118,6 +118,18 @@ def registrationPage(accessID=None):
         R3_electives = list(filter(lambda e: e.rotation == 3, electives))
         R3_electiveIDs = list(map(lambda e: e.id, R3_electives))
 
+        # Avoid back-to-back enrollment for those electives that desire it.
+        # We need to find the session elective IDs for both R1 and R2 electives (they'll be different) and pair them up.
+        avoidConsecutiveSignups_electives = list(filter(lambda e: e.elective.avoidConsecutiveSignups, electives))
+        avoidConsecutiveSignups_R1_electives = list(filter(lambda e: e.rotation == 1, avoidConsecutiveSignups_electives))
+        avoidConsecutiveSignups_pairs = {}
+        for e in avoidConsecutiveSignups_electives:
+            if e.rotation == 2:
+                for r1_e in avoidConsecutiveSignups_R1_electives:
+                    if r1_e.electiveID == e.electiveID:
+                        avoidConsecutiveSignups_pairs[r1_e.id] = e.id
+                        break
+
         studentElectivesIDs = []
         app.logger.debug(f"{_uwsgideets()} [{accessID}] request.form: {request.form}")
 
@@ -165,6 +177,14 @@ def registrationPage(accessID=None):
                         if request.form[key] != request.form[partnerKey]:
                             brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
                             msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                            errors.append(msg)
+                            app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+
+                    if esID in avoidConsecutiveSignups_pairs:
+                        partnerKey = key.replace("1","2") # create the rotation 2 partner key
+                        if avoidConsecutiveSignups_pairs[esID] == int(request.form[partnerKey]):
+                            consecutiveSignup = list(filter(lambda e: e.id == esID, avoidConsecutiveSignups_R1_electives))[0]
+                            msg = f"You cannot take <b>{consecutiveSignup.elective.name}</b> back-to-back on {consecutiveSignup.day}. Change either rotation 1 or 2 to another elective."
                             errors.append(msg)
                             app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
 

@@ -103,6 +103,10 @@
             width: auto;
             height: auto;
         }
+
+        .hidden {
+            visibility: hidden;
+        }
     </style>
 
     <noscript>
@@ -171,9 +175,11 @@
                     return false
                 }
 
-                sameDaysWarning = ""
+                // convert the hidden div into a list of elective names that want to avoid consecutive signups
+                sourceArray = $('#avoidConsecutiveSignups').text().replace(/^\s*$(?:\r\n?|\n)/gm, "").split("\n")
+                avoidConsecutiveSignups = $.map(sourceArray, function(x,i) { return x.trim() })
                 days = ["monday", "wednesday", "thursday", "friday"]
-                multirotationOKClasses = ["🏈 PE"]
+                foundError = false
                 days.forEach(function(day) {
                     s1 = "#"+day+"_rotation_1"
                     s2 = "#"+day+"_rotation_2"
@@ -181,26 +187,14 @@
                     s1_txt = $("option:selected", s1).text().trim().replace(/\s*\(\d+ left\)/, "")
                     s2_txt = $("option:selected", s2).text().trim().replace(/\s*\(\d+ left\)/, "")
 
-                    // Don't carp on multi-rotation classes
-                    kls = $("option:selected", s1).attr('class')
-                    if (kls && kls == "r3_elective") {
-                        return // jQuery's version of continue
-                    }
-                    else {
-                        if (!multirotationOKClasses.includes(s1_txt) && s1_txt == s2_txt) {
-                            if (sameDaysWarning.length == 0) {
-                                sameDaysWarning = "You have the same elective picked for both rotations on the following days:\n\n"
-                            }
-                            sameDaysWarning += "\t" + day.charAt(0).toUpperCase() + day.slice(1) + "\n"
-                        }
+                    if (s1_txt == s2_txt && avoidConsecutiveSignups.includes(s1_txt)) {
+                        $('#errorList').append('<li>You cannot take <b>' + s1_txt + '</b> back-to-back on ' + day.charAt[0].toUpperCase() + day.slice(1) + '. Change either rotation 1 or 2 to another elective. </li>')
+                        $('#status').show();
+                        foundError = true
                     }
                 });
-                if (sameDaysWarning.length > 0) {
-                    sameDaysWarning += "\nThis is not forbidden, but you might get a little bored doing the same elective twice in a row. Click 'cancel' to go back and make changes."
-                    okWithDupes = window.confirm(sameDaysWarning)
-                    if (!okWithDupes) {
-                        return false
-                    }
+                if (foundError) {
+                    return false
                 }
 
                 shouldSubmit = window.confirm("Are you sure these are the electives you want? Click 'OK' if they are.")
@@ -473,6 +467,27 @@
             {% set previous_session = session1 %}
             {% include "schedule_table.html" %}
         {% endif %}
+    </div>
+
+    <div id="avoidConsecutiveSignups" class="hidden">
+        {# We're writing into the HTML the class names that should prevent back-to-back signups. The javascript above will use this. 
+           It's only necessary to look at R1 electives since R2 will have the same details. #}
+
+        {% for sessElec in mon_r1_electives %}
+            {{ sessElec.elective.name if sessElec.elective.avoidConsecutiveSignups }}
+        {% endfor %}
+
+        {% for sessElec in wed_r1_electives %}
+            {{ sessElec.elective.name if sessElec.elective.avoidConsecutiveSignups }}
+        {% endfor %}
+
+        {% for sessElec in thu_r1_electives %}
+            {{ sessElec.elective.name if sessElec.elective.avoidConsecutiveSignups }}
+        {% endfor %}
+
+        {% for sessElec in fri_r1_electives %}
+            {{ sessElec.elective.name if sessElec.elective.avoidConsecutiveSignups }}
+        {% endfor %}
     </div>
 </body>
 </html>

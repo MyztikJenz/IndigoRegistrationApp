@@ -31,6 +31,8 @@ runningSystemAsTest = False
 # Template folder location is relative to the file that creates the app (which is this file)
 application = app = Flask(__name__, template_folder="../templates", static_folder="../images")
 app.config["SECRET_KEY"] = "***REMOVED***"
+app.jinja_env.trim_blocks = True
+app.jinja_env.lstrip_blocks = True
 
 # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
 # db_username = os.environ["RDS_USERNAME"]
@@ -94,11 +96,20 @@ class Elective(Base):
     name: Mapped[str] = mapped_column(String(256), unique=True)
     lead: Mapped[str] = mapped_column(String(128))
     maxAttendees: Mapped[int]
+    # Electives that are two sessions long (1 and 2, or 3 and 4). Does not support an elective being 3 or more sessions long.
     multisession: Mapped[bool]
     room: Mapped[str] = mapped_column(String(128))
+    # This elective is a parent-let elective that is a "sport", which we can consider PE
     consideredPE: Mapped[bool]
+    # Electives that do not show up unless the student has that elective assigned for a rotation. Then it'll be their only choice (RSP and part-two of 
+    # multi-session electives use this)
     assignOnly: Mapped[bool]
+    # The schedules shown at /session_schedules/ won't show private/sensitive electives to everyone. This bit indicates which of those electives are considered
+    # sensitive. Teachers can see these though with the appropriate credentials.
     hideFromSessionSchedules: Mapped[bool]
+    # Some elective leads will host both a rotation 1 and rotation 2 elective, but don't want students to take the electives back-to-back. This applies only
+    # for one session. Back-to-back enrollment over sessions is not prevented.
+    avoidConsecutiveSignups: Mapped[bool]
 
 class SessionElective(Base):
     __tablename__ = "sessionelectives"
@@ -383,13 +394,18 @@ class ConfigUtils():
                     elective.hideFromSessionSchedules = (row["hideFromSessionSchedules"]=="TRUE")
                     shouldUpdate = True
 
+                if elective.avoidConsecutiveSignups != (row["avoidConsecutiveSignups"]=="TRUE"):
+                    elective.avoidConsecutiveSignups = (row["avoidConsecutiveSignups"]=="TRUE")
+                    shouldUpdate = True
+
                 if shouldUpdate:
                     db.session.commit()
             else:
                 # Create an entry into the electives table.
                 elective = Elective(name=row['name'], lead=row['lead'], maxAttendees=int(row['maxAttendees']), multisession=(row["multisession"]=="TRUE"), 
                                     room=row["room"], consideredPE=(row["consideredPE"]=="TRUE"), assignOnly=(row["assignOnly"]=="TRUE"),
-                                    hideFromSessionSchedules=(row["hideFromSessionSchedules"]=="TRUE"))
+                                    hideFromSessionSchedules=(row["hideFromSessionSchedules"]=="TRUE"),
+                                    avoidConsecutiveSignups=(row["avoidConsecutiveSignups"]=="TRUE"))
                 db.session.add(elective)
                 db.session.commit()
 
