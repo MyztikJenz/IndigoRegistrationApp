@@ -369,7 +369,8 @@ def adminPage():
             s = select(Student.name.label("student_name"), SessionElective.day, SessionElective.rotation, Elective.name.label("elective_name")) \
                             .select_from(Student) \
                             .join(Schedule).where(Schedule.studentID == Student.id) \
-                            .join(SessionElective).where(SessionElective.sessionID == prev_sessionNumber) \
+                            .join(SessionElective).where(SessionElective.sessionID == Session.id) \
+                            .join(Session).where(Session.number == prev_sessionNumber) \
                             .join(Elective).where(Elective.id == SessionElective.electiveID) \
                                             .where(or_(Elective.multisession == True,
                                                         Elective.name == "RSP/Homework Help")) \
