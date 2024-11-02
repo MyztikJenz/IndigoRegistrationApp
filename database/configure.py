@@ -143,30 +143,12 @@ class PriorityEnrolling(Base):
 
 
 with app.app_context():
-# # #    db.create_all()
-# #     # Appears that Flask-SQLAlchemy doesn't support creation of Declarative classes.
-# #     # https://github.com/pallets-eco/flask-sqlalchemy/issues/1140
-    # q = select(Session).where(Session.active == True)
-    # currentSession = db.session.execute(q).scalar_one_or_none()
-
-    # sel = select(SessionElective).where(SessionElective.session == currentSession)
-    # r = db.session.scalars(sel)
-    # electives = r.fetchall()
-    # print(f"found {len(electives)}")
-    # for se in electives:
-    #     e = se.elective
-    #     print(f"day: {se.day} rotation: {se.rotation} name: {e.name}")
-
-    # mon_r1 = filter(lambda e: e.day == "Monday" and e.rotation == 1, electives)
-    # for se in mon_r1:
-    #     e = se.elective
-    #     print(f"day: {se.day} rotation: {se.rotation} name: {e.name}")
-
     doDBStuff = True
     insertTestData = False
     if doDBStuff:
         Base.metadata.create_all(db.engine)
 
+        # This is no longer valid, but left here as a reminder of how to prep the database for the first time.
         if insertTestData:
             db.session.add(Student(name="Jake Turner", grade=6, teacher="Ruiz", accessID="sjdhfd"))
             db.session.add(Student(name="Mike Smith", grade=7, teacher="Vong", accessID="xxx888"))
@@ -510,47 +492,3 @@ class ConfigUtils():
         db.session.commit()
 
         return('ok', "All database values dropped")
-
-    # @classmethod
-    # def old_uploadSpecificAssignments(cls, data=None, sessionNumber=None):
-    #     if not data:
-    #         return('error', "No data found")
-    #     if not sessionNumber:
-    #         return('error', "Session number is required")
-        
-    #     session = db.session.scalars(select(Session).where(Session.number == sessionNumber)).first()
-
-    #     countOfAssignments = 0
-    #     r = csv.DictReader(data)
-    #     for row in r:
-    #         # Find the student and the elective they need to take.
-    #         sel = select(Student).where(Student.name == row["student"])
-    #         r = db.session.execute(sel)
-    #         student = r.scalar_one_or_none()
-    #         if not student:
-    #             db.session.rollback()
-    #             return('error', f"Could not find a student record for {row['student']}")
-
-    #         scheduledElectives = []
-    #         for day in ["Monday", "Wednesday", "Thursday", "Friday"]:
-    #             electiveName = row[day]
-    #             if electiveName:
-    #                 subq = select(SessionElective).select_from(Elective).where(Elective.name.startswith(electiveName)).join(SessionElective)\
-    #                                                                     .where(SessionElective.electiveID == Elective.id)\
-    #                                                                     .where(SessionElective.rotation == int(row["rotation"]))\
-    #                                                                     .where(SessionElective.day == day)\
-    #                                                                     .join(Session).where(SessionElective.session == session)
-
-    #                 se = db.session.execute(subq).scalar_one_or_none()
-    #                 if not se:
-    #                     db.session.rollback()
-    #                     return('error', f"Could not find a matching elective name starting with {electiveName} on {day} rotation {row['rotation']}")
-    
-    #                 s = Schedule(sessionElective=se)
-    #                 scheduledElectives.append(s)
-    #                 countOfAssignments += 1
-            
-    #         student.schedule.extend(scheduledElectives)
-
-    #     db.session.commit()
-    #     return('ok', f"Performed {countOfAssignments} assignments.")
