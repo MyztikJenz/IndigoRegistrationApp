@@ -32,6 +32,7 @@ from database.configure import *
 #   And available to teachers (if they are so inclined)
 #   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
 #       Needs to be separate, it's a back-door otherwise
+# Is there a way to detect over-filled multisession classes and expand their max size to accommodate? May not be worth the effort.
 #
 # Required before next session
 # Move service-related data into the environment
