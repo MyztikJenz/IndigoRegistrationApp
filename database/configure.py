@@ -33,6 +33,8 @@ application = app = Flask(__name__, template_folder="../templates", static_folde
 app.config["SECRET_KEY"] = "***REMOVED***"
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
+# Useful to see values the template receives. Uncomment and use {% debug %} to see the output.
+#app.jinja_env.add_extension('jinja2.ext.debug')
 
 # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
 # db_username = os.environ["RDS_USERNAME"]
@@ -235,14 +237,36 @@ class RegistrationTools():
         return nextActive
 
     @classmethod
-    def registerStudent(cls, student, electives):
+    def registerStudent(cls, student, electives, session=None):
         schedule = []
         for se in electives:
             s = Schedule(sessionElective=se)
             schedule.append(s)
 
-        #TODO - jimt - If this ever gets re-run, it'll extend instead of replace. Probably should replace.
-        student.schedule.extend(schedule)
+        # If a session was received, we're attemtping to re-enroll this student for that session.
+        if session:
+            electivesForSession = RegistrationTools.chosenElectivesForSessions(student, session)
+            electivesForSessionIDs = list(map(lambda e: e.id, electivesForSession))
+
+            # If the new electives above contain the same ID, we don't need to delete and re-add. Just ignore it.
+            newElectives = []
+            for s in schedule:
+                if s.sessionElective.id in electivesForSessionIDs: # New schedule has the same as the old schedule
+                    electivesForSessionIDs.remove(s.sessionElective.id)
+                else:
+                    newElectives.append(s) # This is a new elective
+            # What remains in electivesForSessionIDs should be the electives we need to delete
+            electivesToDelete = electivesForSessionIDs
+
+            stmt = delete(Schedule).where(Schedule.studentID == student.id)\
+                                   .where(Schedule.sessionElectiveID.in_(electivesToDelete))
+            db.session.execute(stmt)
+            db.session.flush()
+            student.schedule.extend(newElectives)
+        else:
+            # New registration, just add to the existing list
+            student.schedule.extend(schedule)
+
         db.session.commit()
 
         # Assuming it all went well, drop from AssignedClasses any entries, if any. 

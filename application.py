@@ -28,26 +28,12 @@ from database.configure import *
 #   no matching student found for accessID 1c5e3f5 אדוויקספפרדספדס
 #
 # Very nice to have (it's a pain right now)
-# Editing a student's schedule is a pain right now, needs to be better
-#   And available to teachers (if they are so inclined)
-#   Perhaps there's another page that loads the same thing students see, but with all options available. Would allow me to see everything all at once.
-#       Needs to be separate, it's a back-door otherwise
 # Is there a way to detect over-filled multisession classes and expand their max size to accommodate? May not be worth the effort.
 #
 # Required before next session
 # Move service-related data into the environment
 #   see https://help.pythonanywhere.com/pages/environment-variables-for-web-apps/
 #
-# DONE
-# Reset from last year - clear out the database
-# Enable option to allow studends to enroll by grade level
-# Should we limit PE? To what? and how?
-#   this was a significant problem in Session 4. It does need to be limited, gut feeling is to 5 given the makeup of the offerings we had in 2023-24
-# When the form switches the other popup to support multi-rotation electives, there needs to be a callout that it happened. Too many are missing the change.
-# Need a /x/demo account
-# Schedule viewer (not just download)
-# Option to prevent classes from being taken in back-to-back rotations (not sessions)
-#   But not PE
 
 
 @app.route("/")
@@ -57,7 +43,18 @@ def hello_world():
 
 @app.route("/x")
 @app.route("/x/<accessID>", methods=['GET', 'POST'])
-def registrationPage(accessID=None):
+def studentSchedulerEntryPage(accessID=None):
+    return registrationPage(accessID)
+
+# A more flexible way to do authentication would be to use `flask_httpauth.HTTPBasicAuth` but since we don't really need
+# to have multiple users or roles, only restrict unfettered access, it's a bit of overkill.
+@app.route("/scheduler/<accessID>/<passkey>", methods=['GET', 'POST'])
+def adminSchedulerEntryPage(accessID=None, passkey=""):
+    # Note: the passkey must be all lower-case. It can contain numbers, dashes, or underscores, but all lower-case letters.
+    passkeyIsCorrect = (hashlib.md5(passkey.encode()).hexdigest() == "179cb9353b243ed56364684d115c6976")
+    return registrationPage(accessID, adminOverride=passkeyIsCorrect)
+
+def registrationPage(accessID=None, adminOverride=False):
     if not accessID:
         return "<p>" # show nothing if someone just happens to find this page and doesn't provide an accessID
 
@@ -85,7 +82,7 @@ def registrationPage(accessID=None):
     subq = select(gradeColumn).select_from(Session).where(Session.active == True)
     isAllowToRegisterByGrade = db.session.scalar(subq)
 
-    isAllowToRegister = isAllowToRegisterByTeacher or isAllowToRegisterByGrade or accessID == "studentdemo"
+    isAllowToRegister = isAllowToRegisterByTeacher or isAllowToRegisterByGrade or accessID == "studentdemo" or adminOverride
 
     if not isAllowToRegister and currentSession.Priority == 1:
         # Maybe they are on the priority list
@@ -103,10 +100,12 @@ def registrationPage(accessID=None):
     subq = select(SessionElective).where(SessionElective.session == currentSession)
     electives = db.session.scalars(subq).fetchall()
 
-    isEnrolledForSession = RegistrationTools.studentEnrolledForSession(student, currentSession)
-    if isEnrolledForSession:
-        app.logger.info(f"{_uwsgideets()} [{accessID}] already registered, showing schedule")
-        return showSchedule(student, currentSession)
+    # Never show the existing schedule if we're in admin override.
+    if not adminOverride:
+        isEnrolledForSession = RegistrationTools.studentEnrolledForSession(student, currentSession)
+        if isEnrolledForSession:
+            app.logger.info(f"{_uwsgideets()} [{accessID}] already registered, showing schedule")
+            return showSchedule(student, currentSession)    
 
     previousForm = {}
     errors = []
@@ -161,50 +160,58 @@ def registrationPage(accessID=None):
             #                 It will continue execution from the caller regardless of what Flask did.
             @uwsgidecorators.lock
             def _runEnrollmentAttempt():
-                PE_count = 0
-                currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)  # the count of seats already occupied (the reason we're under the lock)
+                if adminOverride:
+                    # Anything goes.
+                    for key in request.form:
+                        esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
+                        studentElectivesIDs.append(esID)
+                else:
+                    PE_count = 0
+                    currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)  # the count of seats already occupied (the reason we're under the lock)
 
-                for key in request.form:
-                    esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
-                    studentElectivesIDs.append(esID)
+                    for key in request.form:
+                        esID = int(request.form[key]) # everyone here expects this to be a number, including currentEnrollment
+                        studentElectivesIDs.append(esID)
 
-                    if esID in PE_electiveIDs:
-                        PE_count += 1
+                        if esID in PE_electiveIDs:
+                            PE_count += 1
 
-                    if esID in R3_electiveIDs:
-                        partnerKey = key.replace("1","2") # Assume our id ends in 1
-                        if key[-1] == "2":
-                            partnerKey = key.replace("2", "1")
-                        if request.form[key] != request.form[partnerKey]:
-                            brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
-                            msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                        if esID in R3_electiveIDs:
+                            partnerKey = key.replace("1","2") # Assume our id ends in 1
+                            if key[-1] == "2":
+                                partnerKey = key.replace("2", "1")
+                            if request.form[key] != request.form[partnerKey]:
+                                brokenRotation = list(filter(lambda e: e.id == esID, electives))[0]
+                                msg = f"A double-rotation class '{brokenRotation.elective.name}' was not submitted as both rotation 1 and rotation 2. Make sure that <strong>{brokenRotation.day}</strong> has both rotations set to this elective."
+                                errors.append(msg)
+                                app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+
+                        if esID in avoidConsecutiveSignups_pairs:
+                            partnerKey = key.replace("1","2") # create the rotation 2 partner key
+                            if avoidConsecutiveSignups_pairs[esID] == int(request.form[partnerKey]):
+                                consecutiveSignup = list(filter(lambda e: e.id == esID, avoidConsecutiveSignups_R1_electives))[0]
+                                msg = f"You cannot take <b>{consecutiveSignup.elective.name}</b> back-to-back on {consecutiveSignup.day}. Change either rotation 1 or 2 to another elective."
+                                errors.append(msg)
+                                app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+
+                        # Did a class fill up between the form being loaded and submitted?
+                        if currentEnrollment[esID]["remaining"] <= 0:
+                            fullElective = list(filter(lambda e: e.id == esID, electives))[0]
+                            msg = f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective."
                             errors.append(msg)
                             app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
 
-                    if esID in avoidConsecutiveSignups_pairs:
-                        partnerKey = key.replace("1","2") # create the rotation 2 partner key
-                        if avoidConsecutiveSignups_pairs[esID] == int(request.form[partnerKey]):
-                            consecutiveSignup = list(filter(lambda e: e.id == esID, avoidConsecutiveSignups_R1_electives))[0]
-                            msg = f"You cannot take <b>{consecutiveSignup.elective.name}</b> back-to-back on {consecutiveSignup.day}. Change either rotation 1 or 2 to another elective."
-                            errors.append(msg)
-                            app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
-
-                    # Did a class fill up between the form being loaded and submitted?
-                    if currentEnrollment[esID]["remaining"] <= 0:
-                        fullElective = list(filter(lambda e: e.id == esID, electives))[0]
-                        msg = f"The class '{fullElective.elective.name}' on {fullElective.day} is now full. Please choose another elective."
+                    if PE_count < 3:
+                        msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
                         errors.append(msg)
                         app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+                    elif PE_count > 4: 
+                        msg = f"You can have at most 4 PE electives, you currently have {PE_count}. Choose different non-PE electives."
+                        errors.append(msg)
+                        app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
+                # End non-adminOverride validation checks
 
-                if PE_count < 3:
-                    msg = f"You need at least 3 PE electives, you currently have {PE_count}. Look for electives with 🏈."
-                    errors.append(msg)
-                    app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
-                elif PE_count > 4: 
-                    msg = f"You can have at most 4 PE electives, you currently have {PE_count}. Choose different non-PE electives."
-                    errors.append(msg)
-                    app.logger.error(f"{_uwsgideets()} [{accessID}] {msg}")
-
+                # Even under adminOverride circumstances, we do want to validate the server hasn't botched something up.
                 if len(studentElectivesIDs) != 8:
                     msg = f"Critical application error! Unexpected count of elective IDs <pre>{studentElectivesIDs}</pre>. (this is not an error you can fix)"
                     errors.append(msg)
@@ -231,7 +238,7 @@ def registrationPage(accessID=None):
                         if accessID == "studentdemo":
                             (code, result) = ('ok', 'Demo account registration, not real')
                         else:
-                            (code, result) = RegistrationTools.registerStudent(student, studentElectives)
+                            (code, result) = RegistrationTools.registerStudent(student, studentElectives, currentSession if adminOverride else None)
 
                         return (code, result, studentElectives)
 
@@ -242,7 +249,7 @@ def registrationPage(accessID=None):
                 previousForm = request.form
             else:
                 if (code == "ok"):
-                    return showSchedule(student, currentSession, studentElectives)
+                    return showSchedule(student, currentSession, studentElectives, adminOverride)
                 else:
                     # Something has gone pretty wrong at this point. Database has failed to accept the addition.
                     err = f"{_uwsgideets()} [{accessID}] Failed to save results: {result}"
@@ -344,6 +351,20 @@ def registrationPage(accessID=None):
     # This is also how we get currentEnrollment for GET requests. 
     # Calling this as late as possible to ensure the most up-to-date info in the form
     currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)
+
+    if adminOverride:
+        # We will not get here if this is not an override and the student is already enrolled. 
+        electives = RegistrationTools.chosenElectivesForSessions(student, currentSession)
+        if len(electives) > 0:
+            rebuiltForm = {'adminOverride':True}
+            for day in ["monday", "wednesday", "thursday", "friday"]:
+                for rotation in [1, 2]:
+                    key = f"{day}_rotation_{rotation}"
+                    tgtDay = day.capitalize()
+                    e = list(filter(lambda e: e.day == tgtDay and e.rotation in [rotation,3], electives))[0]
+                    rebuiltForm[key] = e.id
+
+            previousForm=rebuiltForm
 
     return render_template('registration.html', student=student, currentEnrollment=currentEnrollment, session=currentSession,
                                                 previousForm=previousForm, errors=errors,
@@ -802,7 +823,7 @@ def generateJSON(task=None):
 
 # Not a flask route. Only called internally, but from inside flask contexts.
 # This function needs to return to its caller what it wants to show on the screen.
-def showSchedule(student, session=None, electives=None):
+def showSchedule(student, session=None, electives=None, adminOverride=False):
     if not session:
         session = RegistrationTools.activeSession
     
@@ -818,7 +839,7 @@ def showSchedule(student, session=None, electives=None):
                            thu_r2 = list(filter(lambda e: e.day == "Thursday" and e.rotation in [2,3], electives))[0],
                            fri_r2 = list(filter(lambda e: e.day == "Friday" and e.rotation in [2,3], electives))[0])
 
-    return render_template('schedule.html', student=student, session=session, studentSchedule=studentSchedule)
+    return render_template('schedule.html', student=student, session=session, studentSchedule=studentSchedule, adminOverride=adminOverride)
 
 # This is a test route to verify that critical section locking works as expected. You can call this
 # many times concurrently and pass different values, each value will have the function wait for that 

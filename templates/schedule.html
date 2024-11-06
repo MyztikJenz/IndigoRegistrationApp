@@ -86,9 +86,27 @@
         .thankyounote {
             padding:8px;
         }
+
+        .admin_header {
+            text-align:center;
+            margin:4px;
+            border:2px solid rgb(144, 0, 255);
+            border-radius:4px;
+            padding:4px;
+            background:linear-gradient(to right, rgb(121, 59, 255), rgb(168, 92, 255));
+        }
+
+        a:hover, a:visited, a:link, a:active {
+            text-decoration: none;
+            color:#006bff;
+        }
+
     </style>
 </head>
 <body>
+    {% if adminOverride %}
+        <div class="admin_header">Admin Override</div>
+    {% endif %}
     <div class="userDetails">
         <div class="inline_block_child">
             <b>Name:</b> {{ student.name }}<br>
@@ -98,6 +116,9 @@
         <div class="inline_block_child" style="margin-left:1rem;">
             <b>Session #:</b> {{ session.number }} <br>
             <b>Dates:</b> {{ session.startDate }} - {{ session.endDate }}
+            {% if adminOverride %}
+                <br><a href="javascript:window.location.reload(true)">Click here to re-run registration</a>
+            {% endif %}
         </div>
     </div>
     <div class="thankyounote">

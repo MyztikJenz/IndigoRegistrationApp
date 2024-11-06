@@ -166,25 +166,44 @@
         });
 
         $(function() {
-            $('#openStudentScheduleButton').click(function() {
+            $('#viewStudentScheduleButton').click(function() {
                 studentID = $("option:selected", $('#modify_assignment_student')).attr('value')
 
                 if (studentID == "no_name") {
                     return
                 }
+                openStudentSchedule("view", studentID)
+            });
+        });
 
-                $.getJSON("/_json_/student_access_key", {"sID": studentID}, function(data) {
+        $(function() {
+            $('#editStudentScheduleButton').click(function() {
+                studentID = $("option:selected", $('#modify_assignment_student')).attr('value')
+
+                if (studentID == "no_name") {
+                    return
+                }
+                openStudentSchedule("edit", studentID)
+            });
+        });
+
+
+        function openStudentSchedule(viewOrEdit, studentID) {
+            $.getJSON("/_json_/student_access_key", {"sID": studentID}, function(data) {
                     if (data['error']) {
                         alert("Error: " + data['error'])
                     }
                     else {
                         access_key = data['key']
-                        url = window.location.origin + "/x/" + access_key
+                        url = window.location.origin + (viewOrEdit == "view" ? "/x/" : "/scheduler/") + access_key
+                        alert(url)
+                        if (viewOrEdit == "edit") {
+                            url += "/nope"
+                        }
                         window.open(url, '_blank')
                     }
                 });
-            });
-        });
+        }
 
         $(function() {
             $('#resetDatabaseForm').on('submit', function() {
@@ -410,7 +429,27 @@
         <p>
             <strong>Modify Assignments:</strong><p>
                 Allows you to move students around as needed. Does not take into account occupancy, so you can overload a class if you'd like.
-            <form method=post enctype=multipart/form-data action="/_admin_">
+                <table id="modify_elective_assignment_table">
+                    <tr>
+                        <td class="modify_td_key">Student:</td>
+                        <td>
+                            <select name="modify_assignment_student" id="modify_assignment_student">
+                                <option value="no_name" selected disabled>Pick a student</option>
+                                {% for student in students %}
+                                    <option value="{{ student.id }}">{{ student.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <button class="submitButton" id="viewStudentScheduleButton" type="button">View Schedule</button>
+                            &nbsp;&nbsp;
+                            <button class="submitButton" id="editStudentScheduleButton" type="button">Edit Schedule</button>
+                        </td>
+                    </tr>
+                </table>
+            <!-- <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type = "hidden" name="formID" value="modify_elective_assignment">
                 <table id="modify_elective_assignment_table">
                     <tr>
@@ -461,7 +500,7 @@
                         </td>
                     </tr>
                 </table>
-            </form>
+            </form> -->
         </p>
     </div>
 </div>
