@@ -35,6 +35,13 @@ from database.configure import *
 #   see https://help.pythonanywhere.com/pages/environment-variables-for-web-apps/
 #
 
+@auth.verify_password
+def verify_password(username, password):
+    app.logger.error(f"verify_password {username}:{password}")
+    stmt = select(AdminUsers).where(AdminUsers.username == username)
+    user = db.session.execute(stmt).scalar_one_or_none()
+    if user and hashlib.md5(password.encode()).hexdigest() == user.password:
+        return username
 
 @app.route("/")
 def hello_world():
@@ -46,13 +53,11 @@ def hello_world():
 def studentSchedulerEntryPage(accessID=None):
     return registrationPage(accessID)
 
-# A more flexible way to do authentication would be to use `flask_httpauth.HTTPBasicAuth` but since we don't really need
-# to have multiple users or roles, only restrict unfettered access, it's a bit of overkill.
-@app.route("/scheduler/<accessID>/<passkey>", methods=['GET', 'POST'])
-def adminSchedulerEntryPage(accessID=None, passkey=""):
-    # Note: the passkey must be all lower-case. It can contain numbers, dashes, or underscores, but all lower-case letters.
-    passkeyIsCorrect = (hashlib.md5(passkey.encode()).hexdigest() == "179cb9353b243ed56364684d115c6976")
-    return registrationPage(accessID, adminOverride=passkeyIsCorrect)
+@app.route("/scheduler/<accessID>", methods=['GET', 'POST'])
+@auth.login_required
+def adminSchedulerEntryPage(accessID=None):
+    # This page only loads if the user has authenticated.    
+    return registrationPage(accessID, adminOverride=True)
 
 def registrationPage(accessID=None, adminOverride=False):
     if not accessID:
@@ -383,6 +388,7 @@ def registrationPage(accessID=None, adminOverride=False):
                                                 )
 
 @app.route("/_admin_", methods=['GET', 'POST'])
+@auth.login_required
 def adminPage():
     if request.method == "POST":
         if request.form["formID"] == "two_session_assignments":
@@ -778,7 +784,7 @@ def generateJSON(task=None):
         studentID = request.args.get("sID")
         targetSession = request.args.get("session")
         session = None
-        if targetSession == "current":
+        if not targetSession or targetSession == "current":
             session = RegistrationTools.activeSession()
         else:
             session = db.session.execute(select(Session).where(Session.number == int(targetSession))).scalar_one_or_none()
@@ -892,27 +898,27 @@ def _uwsgideets():
     return f"[wkr/req {uwsgi.worker_id()}/{uwsgi.request_id()}]"
 
 # This builds a per-day (or all days, if you ask for it) schedule suitable for printing. You can also download CSVs of these.
+# This is the route non-teachers should use.
+@app.route("/session_schedules")
 @app.route("/session_schedules/<targetDay>")
-@app.route("/session_schedules/<targetDay>/<passkey>")
-def session_schedules(targetDay="all", passkey=""):
-    currentSession = RegistrationTools.activeSession()
+def show_session_schedules(targetDay="all"):
+    return session_schedules(targetDay, showHiddenElectives=False)
 
+@app.route("/all_session_schedules")
+@app.route("/all_session_schedules/<targetDay>")
+@auth.login_required
+def show_all_session_schedules(targetDay="all"):
     # Some classes's enrollments are available only to teachers (RSP, Gender and Sexuality Alliance, etc) so this is the way we can allow
-    # teachers to see those schedules at the same time not showing them to other parents. The hex value below can be anything you want
-    # it's just the output of the following:
-    #       python3 -c 'import hashlib;print(hashlib.md5("thesecretkey".encode()).hexdigest())'
-    #         -or-
-    #       md5 -s "thesecretkey"
-    # where "thesecretkey" is what you want the teachers to be adding to the URL, e.g.,
-    #       https://***REMOVED***.pythonanywhere.com/session_schedules/thursday/thesecretkey
-    # 
+    # teachers to see those schedules at the same time not showing them to other parents.
+    return session_schedules(targetDay, showHiddenElectives=True)
+
+def session_schedules(targetDay="all", showHiddenElectives=False):
     # The database has a boolean field "hideFromSessionSchedules" which controls if the elective is viewable here or not. "assignOnly" is 
     # not this field, that is for electives that should not be allowed to be generally selectable.
-    #
-    # Note: the passkey must be all lower-case. It can contain numbers, dashes, or underscores, but all lower-case letters.
-    passkeyIsCorrect = (hashlib.md5(passkey.encode()).hexdigest() == "5427040c313c735f56be5cfb833d89e6")
+    currentSession = RegistrationTools.activeSession()
+
     filterArgs = [0]
-    if passkeyIsCorrect:
+    if showHiddenElectives:
         filterArgs.append(1)
 
     days = ["Monday", "Wednesday", "Thursday", "Friday"]

@@ -4,6 +4,7 @@ from flask import Flask
 from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
+from flask_httpauth import HTTPBasicAuth
 
 from typing import List
 
@@ -35,6 +36,8 @@ app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 # Useful to see values the template receives. Uncomment and use {% debug %} to see the output.
 #app.jinja_env.add_extension('jinja2.ext.debug')
+
+auth = HTTPBasicAuth()
 
 # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
 # db_username = os.environ["RDS_USERNAME"]
@@ -143,6 +146,11 @@ class PriorityEnrolling(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     studentID: Mapped[int]
 
+class AdminUsers(Base):
+    __tablename__ = "adminusers"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(256), unique=True)
+    password: Mapped[str] = mapped_column(String(256))
 
 with app.app_context():
     doDBStuff = True
