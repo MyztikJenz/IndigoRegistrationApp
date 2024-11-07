@@ -276,14 +276,22 @@ def registrationPage(accessID=None, adminOverride=False):
 
 
     def _findMandatoryElectives(day, electives):
+        if adminOverride: # Don't filter down to just mandatory electives when attempting admin assignment
+            return ([],[],[])
+
         r1 = list(filter(lambda e: e.day == day and e.rotation == 1, electives))
         r2 = list(filter(lambda e: e.day == day and e.rotation == 2, electives))
         r3 = list(filter(lambda e: e.day == day and e.rotation == 3, electives))
         return (r1, r2, r3)
 
     def _findChoosableElectives(day, rotation, electives, session):
-        fileredElectives = list(filter(lambda e: e.day == day and e.rotation == rotation and e.elective.assignOnly == False, electives))
-        if session.number % 2 == 0:
+        if adminOverride:
+            # Admin selection should see all electives, including those that are expected to be assign-only
+            fileredElectives = list(filter(lambda e: e.day == day and e.rotation == rotation, electives))
+        else:
+            fileredElectives = list(filter(lambda e: e.day == day and e.rotation == rotation and e.elective.assignOnly == False, electives))
+
+        if session.number % 2 == 0 and not adminOverride:
             fileredElectives = list(filter(lambda e: e.elective.multisession == False, fileredElectives))
 
         # TODO - jimt - Would be nice if the classes were ordered alphabetically
