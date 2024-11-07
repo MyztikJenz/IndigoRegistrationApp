@@ -37,7 +37,6 @@ from database.configure import *
 
 @auth.verify_password
 def verify_password(username, password):
-    app.logger.error(f"verify_password {username}:{password}")
     stmt = select(AdminUsers).where(AdminUsers.username == username)
     user = db.session.execute(stmt).scalar_one_or_none()
     if user and hashlib.md5(password.encode()).hexdigest() == user.password:
