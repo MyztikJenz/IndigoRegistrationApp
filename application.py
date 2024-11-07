@@ -365,10 +365,10 @@ def registrationPage(accessID=None, adminOverride=False):
     currentEnrollment = RegistrationTools.currentEnrollmentCounts(electives)
 
     if adminOverride:
+        rebuiltForm = {'adminOverride':True}
         # We will not get here if this is not an override and the student is already enrolled. 
         electives = RegistrationTools.chosenElectivesForSessions(student, currentSession)
         if len(electives) > 0:
-            rebuiltForm = {'adminOverride':True}
             for day in ["monday", "wednesday", "thursday", "friday"]:
                 for rotation in [1, 2]:
                     key = f"{day}_rotation_{rotation}"
@@ -376,7 +376,7 @@ def registrationPage(accessID=None, adminOverride=False):
                     e = list(filter(lambda e: e.day == tgtDay and e.rotation in [rotation,3], electives))[0]
                     rebuiltForm[key] = e.id
 
-            previousForm=rebuiltForm
+        previousForm=rebuiltForm
 
     return render_template('registration.html', student=student, currentEnrollment=currentEnrollment, session=currentSession,
                                                 previousForm=previousForm, errors=errors,
