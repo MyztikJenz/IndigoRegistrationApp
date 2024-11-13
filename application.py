@@ -970,6 +970,45 @@ def session_schedules(targetDay="all", showHiddenElectives=False):
                                                            friday=dayContainers["Friday"] if "Friday" in dayContainers else None
                                                            )
 
+@app.route("/pe_session_schedules")
+def create_pe_schedules_zipfile():
+    currentSession = RegistrationTools.activeSession()
+    zipBuffer = io.BytesIO()
+    zipOutput = zipfile.ZipFile(zipBuffer, "w")
+    
+    r1_PE_electiveAttendees = []
+    r2_PE_electiveAttendees = []
+
+    # This appears to always sort in the expected order (M-F R1, then M-F R2). I bet we're getting lucky. We could sort these if necessary but we're going to let it ride.
+    subq = select(SessionElective).where(SessionElective.day.in_(["Monday", "Wednesday", "Thursday", "Friday"]))\
+                                    .where(SessionElective.rotation.in_([1,2]))\
+                                    .join(Elective).where(SessionElective.electiveID == Elective.id).where(Elective.name == "PE")\
+                                    .join(Session).where(SessionElective.session == currentSession)
+    sessionElectivesForDay = db.session.scalars(subq).fetchall()
+    for se in sessionElectivesForDay:
+        subq = select(Student.name).select_from(Schedule).where(Schedule.sessionElectiveID == se.id).join(Student).where(Schedule.studentID == Student.id).order_by(Student.name)
+        students = db.session.scalars(subq).fetchall()
+        if se.rotation == 1:
+            r1_PE_electiveAttendees.append(students)
+        else:
+            r2_PE_electiveAttendees.append(students)
+
+    def _writeRotation(filename, attendees):
+        f = io.StringIO()
+        w = csv.writer(f, quoting=csv.QUOTE_ALL)
+        w.writerow(["Monday", "Wednesday", "Thursday", "Friday"])
+        zl = zip_longest(*attendees)
+        for z in zl:
+            w.writerow(z)
+        zipOutput.writestr(filename, f.getvalue())
+
+    _writeRotation(f"Session{currentSession.number}_R1_PE.csv", r1_PE_electiveAttendees)
+    _writeRotation(f"Session{currentSession.number}_R2_PE.csv", r2_PE_electiveAttendees)
+
+    zipOutput.close()
+    return Response(zipBuffer.getvalue(), mimetype="application/zip", headers={"Content-Disposition":f"attachment;filename=Session #{currentSession.number} PE schedules.zip"})
+
+
 # If you uncomment this, you can execute code at startup of the server on the command line. Helpful to sort out syntax, SQL queries, and Jinja template bugs
 # with app.app_context():
 #     currentSession = RegistrationTools.activeSession()
