@@ -344,20 +344,24 @@ class ConfigUtils():
         if not data:
             return('error', "No data found")
 
+        newStudentCount = 0
         r = csv.DictReader(data)
         for row in r:
-#            app.logger.info(row["name"])
-            key = row["name"] + "|" + row["class"] + "|" + row["grade"]
-            md5hash = hashlib.md5(key.encode()).hexdigest()
-            if runningSystemAsTest:
-                accessID = md5hash[-7:]
-            else:
-                accessID = md5hash[:7]
-            db.session.add(Student(name=row["name"], grade=row["grade"][:1], teacher=row["class"], accessID=accessID))
+            existingStudent = db.session.scalars(select(Student).where(Student.name == row['name'])).first()
+            if not existingStudent:
+                newStudentCount += 1
+                key = row["name"] + "|" + row["class"] + "|" + row["grade"]
+                md5hash = hashlib.md5(key.encode()).hexdigest()
+                if runningSystemAsTest:
+                    accessID = md5hash[-7:]
+                else:
+                    accessID = md5hash[:7]
+                db.session.add(Student(name=row["name"], grade=row["grade"][:1], teacher=row["class"], accessID=accessID))
 
-        db.session.commit()
+        if newStudentCount:
+            db.session.commit()
             
-        return('ok', 'Roster uploaded')
+        return('ok', f"Roster uploaded, {newStudentCount} records added.")
 
     @classmethod
     def uploadElectives(cls, data=None, sessionNumber=None):

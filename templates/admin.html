@@ -239,8 +239,10 @@
         <p>
             <strong>Roster Upload:</strong> Student count in database: {{ studentCount }}<p>
             The list of students that will be taking electives. Populates the <code>students</code> table. You can drop and re-upload this table if need be, 
-            but it's better to just edit as needed (dropping students isn't necessary, but adding new ones will be).
+            but it's better to just add students as needed (dropping students isn't necessary).
             <p>
+                You can re-upload the roster spreadsheet and same-name entries that already exist will be ignore (not re-created).
+            </p>
             <form method=post enctype=multipart/form-data action="/_admin_">
                 <input type="hidden" name="formID" value="roster_upload">
                 <input type=file name="roster">
