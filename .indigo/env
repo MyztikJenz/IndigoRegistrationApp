@@ -1,6 +1,0 @@
-export SECRET_KEY='***REMOVED***'
-export DB_USERNAME='***REMOVED***'
-export DB_PASSWORD='***REMOVED***'
-export DB_HOST='***REMOVED***'
-export DB_PORT=3306
-export DB_NAME='***REMOVED***'
