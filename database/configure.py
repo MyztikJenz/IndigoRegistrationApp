@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import sys
 from flask import Flask
 from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -7,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_httpauth import HTTPBasicAuth
 
 from typing import List
+from dotenv import load_dotenv
 
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer, String
@@ -31,7 +33,6 @@ runningSystemAsTest = False
 
 # Template folder location is relative to the file that creates the app (which is this file)
 application = app = Flask(__name__, template_folder="../templates", static_folder="../images")
-app.config["SECRET_KEY"] = "***REMOVED***"
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 # Useful to see values the template receives. Uncomment and use {% debug %} to see the output.
@@ -39,30 +40,26 @@ app.jinja_env.lstrip_blocks = True
 
 auth = HTTPBasicAuth()
 
-# https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features.managing.db.html?icmpid=docs_elasticbeanstalk_console
-# db_username = os.environ["RDS_USERNAME"]
-# db_password = os.environ["RDS_PASSWORD"]
-# db_host     = os.environ["RDS_HOSTNAME"]
-# db_port     = int(os.environ["RDS_PORT"])
-# db_name     = os.environ["RDS_DB_NAME"]
-
 if "RUN_LOCALLY" in os.environ:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///session1.sqlite.db"
+
+    scriptDir = os.path.dirname(__file__)
+    envFile = os.path.join(scriptDir, '..', '.indigo', 'env')
+    load_dotenv(envFile)
 else:
     # PythonAnywhere
-    db_username = "***REMOVED***"
-    db_password = "***REMOVED***"
-    db_host     = "***REMOVED***"
-    db_port     = 3306
-    db_name     = "***REMOVED***"
+    appFolder = os.path.expanduser('~/IndigoRegistrationApp')
+    load_dotenv(os.path.join(appFolder, '.indigo', 'env'))
+    
+    db_username = os.environ["DB_USERNAME"]
+    db_password = os.environ["DB_PASSWORD"]
+    db_host     = os.environ["DB_HOST"]
+    db_port     = os.environ["DB_PORT"]
+    db_name     = os.environ["DB_NAME"]
     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle' : 280} # https://help.pythonanywhere.com/pages/UsingSQLAlchemywithMySQL/
 
-# A environmental key is set on the ElasticBeanstalk instance to let us know when this code is running local vs in AWS
-# if "INDIGO_AWS" in os.environ:
-#     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
-# else:
-#     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finaldeploytest2.sqlite"
+app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 
 #db = SQLAlchemy(app)
 db = SQLAlchemy(app, engine_options={'pool_recycle' : 280})
