@@ -25,6 +25,11 @@
         "schedule": "(Monday, R1 1:05-1:50)"
     },
     {
+        "k": "class31",
+        "v": "Brain teasers and puzzles",
+        "schedule": "(Monday, R2 1:50-2:35 and R2 1:50-2:35)"
+    },
+    {
         "k": "class6",
         "v": "Nail Art",
         "schedule": "(Thursday, R1 1:05-1:50)"
@@ -52,7 +57,7 @@
     {
         "k": "class17",
         "v": "The GSA: Gender and Sexualities Alliance",
-        "schedule": "(Monday, R2 1:50-2:35)"
+        "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class14",
@@ -66,18 +71,13 @@
     },
     {
         "k": "class22",
-        "v": "Art as Mindfulness",
+        "v": "Art as Service",
         "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class3",
         "v": "Game and Grub",
-        "schedule": "(Friday, R2 1:50-2:35)"
-    },
-    {
-        "k": "class2",
-        "v": "Slime Boss: Your Guide to Running a Business",
-        "schedule": "(Thursday, R1 1:05-1:50 and R2 1:50-2:35)"
+        "schedule": "(Thursday, R2 1:50-2:35)"
     },
     {
         "k": "class23",
@@ -96,18 +96,18 @@
     },
     {
         "k": "class24",
-        "v": "2D Art",
+        "v": "3D Art",
         "schedule": "(Friday, R2 1:50-2:35)"
-    },
-    {
-        "k": "class5",
-        "v": "Contest Math",
-        "schedule": "(Monday, R2 1:50-2:35)"
     },
     {
         "k": "class12",
         "v": "Family Game Night",
         "schedule": "(Wednesday, R1 1:05-1:50)"
+    },
+    {
+        "k": "class28",
+        "v": "Chess",
+        "schedule": "(Wednesday, R2 1:50-2:35)"
     },
     {
         "k": "class9",
@@ -120,6 +120,11 @@
         "schedule": "(Friday, R1 1:05-1:50 and R2 1:50-2:35)"
     },
     {
+        "k": "class29",
+        "v": "Study Hall 2",
+        "schedule": "(Wednesday, R1 1:05-1:50)"
+    },
+    {
         "k": "class13",
         "v": "Volleyball",
         "schedule": "(Monday, R2 1:50-2:35)"
@@ -127,11 +132,6 @@
     {
         "k": "class4",
         "v": "Microscope Lab",
-        "schedule": "(Wednesday, R1 1:05-1:50)"
-    },
-    {
-        "k": "class25",
-        "v": "Impress Everyone with these Easy Dinner Recipes!",
-        "schedule": "(Wednesday, R1 1:05-1:50)"
+        "schedule": "(Thursday, R1 1:05-1:50)"
     }
 ]
