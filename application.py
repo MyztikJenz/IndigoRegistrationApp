@@ -21,7 +21,6 @@ from database.configure import *
 
 ### 
 ### What's left
-# testing
 # Fix the 0 seats bug (in HTML, backend is fixed) [Not sure how realistic this is... it's a hard problem to solve]
 #   This is how to avoid reloading the page on the a class with zero seats available when the form reloads. Feels like we can have "choose one" options that are the defaults
 # Sanitize the accessID. Someone's putting extra non-printable characters at the end (or something...)
@@ -29,10 +28,7 @@ from database.configure import *
 #
 # Very nice to have (it's a pain right now)
 # Is there a way to detect over-filled multisession classes and expand their max size to accommodate? May not be worth the effort.
-#
-# Required before next session
-# Move service-related data into the environment
-#   see https://help.pythonanywhere.com/pages/environment-variables-for-web-apps/
+#    Wouldn't it be easier to automatically deduct from max size the number of reserved seats for a class? (10 max, but 7 assigned. Only allow 3 new signups)
 #
 
 @auth.verify_password
